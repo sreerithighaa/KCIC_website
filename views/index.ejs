@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Simple Dynamic Website</title>
+
+<style>
+body{
+  font-family: Arial;
+}
+
+nav{
+  background:#333;
+  padding:10px;
+}
+
+nav a{
+  color:white;
+  margin-right:15px;
+  text-decoration:none;
+}
+
+.post{
+  border:1px solid #ccc;
+  padding:10px;
+  margin:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<nav>
+<a href="#">Home</a>
+<a href="#">Posts</a>
+</nav>
+
+<h1>Posts from Database</h1>
+
+<div id="posts">
+  <% if (posts && posts.length > 0) { %>
+    <% posts.forEach(post => { %>
+      <div class="post">
+        <h2><%= post.title %></h2>
+        <p><%= post.content %></p>
+      </div>
+    <% }); %>
+  <% } else { %>
+    <p>No posts available.</p>
+  <% } %>
+</div>
+
+</body>
+</html>
