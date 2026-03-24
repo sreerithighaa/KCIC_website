@@ -1,9 +1,5 @@
 # KCIC Academic Website
 
-**Kings Cornerstone International College** — Academic blogging platform built with Node.js, Fastify, PostgreSQL, EJS and Bootstrap 5.
-
----
-
 ## Tech Stack
 
 | Layer       | Technology                        |
@@ -58,58 +54,6 @@ kcic/
 └── public/
     ├── css/style.css          ← Bootstrap overrides + KCIC theme
     └── js/app.js              ← Shared fetch wrapper, Auth, toast, fmtDate
-```
-
----
-
-## Setup & Run
-
-### 1. Install dependencies
-```bash
-npm install
-```
-
-### 2. Configure environment
-```bash
-cp .env.example .env
-# Edit .env with your PostgreSQL credentials and a JWT secret
-```
-
-### 3. Create database
-```bash
-# In psql or pgAdmin, create the database first:
-CREATE DATABASE kcic_db;
-```
-
-### 4. Initialise schema + seed data
-```bash
-npm run db:init
-```
-This creates all tables and inserts:
-- 4 roles, 4 departments, tags
-- 3 seed users (see below)
-- 1 sample announcement
-
-### 5. Start the server
-```bash
-npm start
-# Development (auto-restart):
-npm run dev
-```
-
-Open → **http://localhost:3000**
-
----
-
-## Seed Login Credentials
-
-| Role     | Email                           | Password     |
-|----------|---------------------------------|--------------|
-| Admin    | admin@cornerstone.edu.in        | Admin@1234   |
-| Assessor | assessor@cornerstone.edu.in     | Assess@1234  |
-| Student  | student@cornerstone.edu.in      | Student@1234 |
-
-> ⚠️ Change these passwords after first login in production.
 
 ---
 
