@@ -1,0 +1,113 @@
+<%- include('../partials/header', { title: 'Home', activePage: 'home' }) %>
+
+<style>
+.home-card{background:#fff;border:1px solid var(--kcic-border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;height:100%;}
+.home-card-body{padding:1.1rem 1.2rem 1.2rem;display:flex;flex-direction:column;flex:1;}
+.home-card-dept{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--kcic-accent);margin-bottom:.35rem;}
+.home-card-title{font-weight:700;font-size:.97rem;color:#1a2744;line-height:1.35;margin-bottom:.4rem;}
+.home-card-excerpt{font-size:.83rem;color:var(--kcic-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1;}
+.home-card-meta{display:flex;align-items:center;gap:.45rem;margin-top:.9rem;font-size:.78rem;color:var(--kcic-muted);font-weight:500;}
+.home-avatar-letter{width:24px;height:24px;border-radius:50%;background:var(--kcic-accent-bg);color:var(--kcic-accent);font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+a.blog-card-link{color:inherit;text-decoration:none;display:flex;flex-direction:column;height:100%;}
+a.blog-card-link:hover .home-card{transform:translateY(-3px);box-shadow:0 6px 22px rgba(26,39,68,.10);}
+.dept-home-card{border:1px solid var(--kcic-border);border-radius:10px;padding:1.3rem 1.4rem;background:#fff;}
+.ann-cat-general{color:var(--kcic-accent);}
+.ann-cat-academic{color:#7c3aed;}
+.ann-cat-event{color:#d97706;}
+.ann-cat-urgent{color:#dc2626;}
+</style>
+
+<section class="bg-white py-5 text-center border-bottom">
+  <div class="container">
+    <p class="text-muted small mb-2" style="letter-spacing:.05em">Academic Excellence Platform</p>
+    <h1 class="fw-bold mb-3" style="font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);color:#1a2744;line-height:1.15">
+      Empowering Academic Excellence<br>at Kings Cornerstone
+    </h1>
+    <p class="text-muted mx-auto mb-4" style="max-width:560px;font-size:.95rem">
+      Explore department-wise academic blogs, research insights, and college announcements in one secure platform.
+    </p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="fw-bold mb-0" style="font-family:'Playfair Display',serif;font-size:1.6rem;color:#1a2744">Latest Academic Blogs</h2>
+      <a href="/blogs" class="btn btn-outline-secondary btn-sm px-3">View All</a>
+    </div>
+    <div class="row g-4" id="home-blogs-grid">
+      <div class="col-12 text-center py-4 text-muted" id="blogs-loading"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>
+    </div>
+    <div class="text-center mt-5">
+      <a href="/blogs" class="btn btn-gold px-5 py-2">Explore Blogs</a>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 border-top border-bottom" style="background:#fafbfe">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+      <h2 class="fw-bold mb-0" style="font-family:'Playfair Display',serif;font-size:1.6rem;color:#1a2744">Latest Announcements</h2>
+      <a href="/announcements" class="btn btn-outline-secondary btn-sm px-3">View All</a>
+    </div>
+    <div class="row g-4" id="home-anns-grid">
+      <div class="col-12 text-center py-4 text-muted" id="anns-loading"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 bg-white">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-5" style="font-family:'Playfair Display',serif;font-size:1.8rem;color:#1a2744">Departments</h2>
+    <div class="row g-3">
+      <div class="col-12 col-sm-6 col-md-3"><div class="dept-home-card h-100"><h6 class="fw-bold mb-2" style="color:#1a2744;font-size:1rem">Computing</h6><p class="small text-muted mb-0">Explore programming, software engineering, databases, and modern computing technologies.</p></div></div>
+      <div class="col-12 col-sm-6 col-md-3"><div class="dept-home-card h-100"><h6 class="fw-bold mb-2" style="color:#1a2744;font-size:1rem">Engineering</h6><p class="small text-muted mb-0">Discover innovations in engineering, design principles, and real-world technical solutions.</p></div></div>
+      <div class="col-12 col-sm-6 col-md-3"><div class="dept-home-card h-100"><h6 class="fw-bold mb-2" style="color:#1a2744;font-size:1rem">Business</h6><p class="small text-muted mb-0">Learn about business strategy, leadership, marketing, and global management practices.</p></div></div>
+      <div class="col-12 col-sm-6 col-md-3"><div class="dept-home-card h-100"><h6 class="fw-bold mb-2" style="color:#1a2744;font-size:1rem">Applied Science</h6><p class="small text-muted mb-0">Explore scientific research, analytical methods, and practical applications in modern science.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>
+
+<script>
+function buildBlogCard(p) {
+  var av = p.author_name ? p.author_name.charAt(0).toUpperCase() : '?';
+  return '<div class="col-12 col-sm-6 col-lg-4">' +
+    '<a href="/blog/' + p.post_id + '" class="blog-card-link text-decoration-none">' +
+    '<div class="home-card"><div class="home-card-body">' +
+    '<div class="home-card-dept">' + (p.dept_name||'') + '</div>' +
+    '<div class="home-card-title">' + p.title + '</div>' +
+    '<div class="home-card-excerpt">' + (p.excerpt||'') + '</div>' +
+    '<div class="home-card-meta">' +
+    '<span class="home-avatar-letter">' + av + '</span>' +
+    '<span>' + p.author_name + '</span>' +
+    '<span class="ms-auto">' + fmtDate(p.created_at) + '</span>' +
+    '</div></div></div></a></div>';
+}
+
+function buildAnnCard(a) {
+  return '<div class="col-12 col-sm-6 col-lg-4">' +
+    '<div class="home-card"><div class="home-card-body">' +
+    '<div class="home-card-dept ann-cat-' + (a.category||'general') + '">' + (a.category||'general') + '</div>' +
+    '<div class="home-card-title">' + a.title + '</div>' +
+    '<div class="home-card-meta mt-auto pt-2">' +
+    '<i class="bi bi-person-circle me-1"></i><span>' + (a.author_name||'Admin') + '</span>' +
+    '<span class="ms-auto">' + fmtDate(a.created_at) + '</span>' +
+    '</div></div></div></div>';
+}
+
+api('/posts?limit=3').then(function(data) {
+  var grid = document.getElementById('home-blogs-grid');
+  document.getElementById('blogs-loading').remove();
+  if (!data.posts || !data.posts.length) { grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No published blogs yet.</div>'; return; }
+  var html = ''; data.posts.forEach(function(p) { html += buildBlogCard(p); }); grid.innerHTML = html;
+}).catch(function() { document.getElementById('home-blogs-grid').innerHTML = '<div class="col-12 text-center text-muted py-4">Could not load blogs.</div>'; });
+
+api('/announcements?limit=3').then(function(data) {
+  var grid = document.getElementById('home-anns-grid');
+  document.getElementById('anns-loading').remove();
+  if (!data.announcements || !data.announcements.length) { grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No announcements yet.</div>'; return; }
+  var html = ''; data.announcements.forEach(function(a) { html += buildAnnCard(a); }); grid.innerHTML = html;
+}).catch(function() { document.getElementById('home-anns-grid').innerHTML = '<div class="col-12 text-center text-muted py-4">Could not load announcements.</div>'; });
+</script>

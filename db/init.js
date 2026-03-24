@@ -1,38 +1,30 @@
 require('dotenv').config();
+const fs   = require('fs');
+const path = require('path');
 const pool = require('./pool');
 
-const initializeDatabase = async () => {
+async function init() {
+  console.log('🔧 Initialising KCIC database…');
   try {
-    // Create posts table if it doesn't exist
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS posts (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
+    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+    await pool.query(schema);
+    console.log('✅ Schema + seed users applied.');
 
-    await pool.query(createTableQuery);
-    console.log('Posts table created successfully');
+    const seed = fs.readFileSync(path.join(__dirname, 'seed_posts.sql'), 'utf8');
+    await pool.query(seed);
+    console.log('✅ Demo posts and announcements seeded.');
 
-    // Optional: Insert sample data
-    const insertSampleData = `
-      INSERT INTO posts (title, content) 
-      SELECT 'First Post', 'This is the first post' 
-      WHERE NOT EXISTS (SELECT 1 FROM posts WHERE title = 'First Post');
-    `;
-    
-    await pool.query(insertSampleData);
-    console.log('Sample data inserted');
-
+    console.log('\nTables created:');
+    const tables = await pool.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename`
+    );
+    tables.rows.forEach(r => console.log('  •', r.tablename));
+    console.log('\n🎉 Database ready! Run: npm start');
+  } catch (err) {
+    console.error('❌ Init failed:', err.message);
+  } finally {
     await pool.end();
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    await pool.end();
-    process.exit(1);
   }
-};
+}
 
-initializeDatabase();
+init();

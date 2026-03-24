@@ -1,0 +1,173 @@
+<%- include('../partials/header', { title: 'Academic Blogs', activePage: 'blogs' }) %>
+
+<style>
+.search-input-group .input-group-text{border:1.5px solid #dee2e6;border-right:none;border-radius:50px 0 0 50px;}
+.search-input-group .form-control{border:1.5px solid #dee2e6;border-left:none;border-radius:0 50px 50px 0;}
+.search-input-group .form-control:focus{box-shadow:none;border-color:var(--kcic-accent);}
+.search-input-group:focus-within .input-group-text{border-color:var(--kcic-accent);}
+.blog-card{background:#fff;border:1px solid var(--kcic-border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;height:100%;color:inherit;text-decoration:none;}
+.blog-card:hover{transform:translateY(-3px);box-shadow:0 6px 22px rgba(26,39,68,.10);color:inherit;}
+.blog-card-body{padding:1.1rem 1.2rem 1.2rem;display:flex;flex-direction:column;flex:1;}
+.blog-card-dept{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--kcic-accent);margin-bottom:.35rem;}
+.blog-card-title{font-weight:700;font-size:.97rem;color:#1a2744;line-height:1.35;margin-bottom:.4rem;}
+.blog-card-excerpt{font-size:.83rem;color:var(--kcic-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1;}
+.blog-card-meta{display:flex;align-items:center;gap:.45rem;margin-top:.9rem;font-size:.78rem;color:var(--kcic-muted);font-weight:500;}
+.blog-avatar{width:24px;height:24px;border-radius:50%;background:var(--kcic-accent-bg);color:var(--kcic-accent);font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+</style>
+
+<section class="bg-white py-5 text-center border-bottom">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb justify-content-center small mb-0">
+        <li class="breadcrumb-item"><a href="/home" class="text-muted text-decoration-none">Home</a></li>
+        <li class="breadcrumb-item active text-muted">Blog</li>
+      </ol>
+    </nav>
+    <h1 class="fw-bold mb-2" style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);color:#1a2744">Academic Blogs</h1>
+    <p class="text-muted mb-4" style="font-size:.95rem">Explore department-wise approved academic blogs.</p>
+    <div class="mx-auto" style="max-width:540px">
+      <div class="input-group search-input-group">
+        <span class="input-group-text bg-white border-end-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="search-input" class="form-control border-start-0 ps-1"
+               placeholder="Search by title, author or topic..." style="border-radius:0 50px 50px 0" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- Sidebar filters -->
+    <div class="col-12 col-md-3">
+      <div class="bg-white border rounded-3 p-3 sticky-top" style="top:76px;z-index:10">
+        <p class="text-uppercase fw-semibold text-muted mb-2" style="font-size:.72rem;letter-spacing:.08em">Department</p>
+        <div class="form-check mb-1"><input class="form-check-input" type="radio" name="dept" id="dept-all" value="" checked/><label class="form-check-label small" for="dept-all">All Departments</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="radio" name="dept" id="dept-1" value="1"/><label class="form-check-label small" for="dept-1">Computing</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="radio" name="dept" id="dept-2" value="2"/><label class="form-check-label small" for="dept-2">Business</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="radio" name="dept" id="dept-3" value="3"/><label class="form-check-label small" for="dept-3">Engineering</label></div>
+        <div class="form-check mb-1"><input class="form-check-input" type="radio" name="dept" id="dept-4" value="4"/><label class="form-check-label small" for="dept-4">Applied Science</label></div>
+        <hr class="my-3"/>
+        <p class="text-uppercase fw-semibold text-muted mb-2" style="font-size:.72rem;letter-spacing:.08em">Author</p>
+        <input type="text" id="author-filter" class="form-control form-control-sm rounded-pill" placeholder="Search author..." />
+        <hr class="my-3"/>
+        <p class="text-uppercase fw-semibold text-muted mb-2" style="font-size:.72rem;letter-spacing:.08em">Date From</p>
+        <input type="date" id="date-filter" class="form-control form-control-sm" />
+        <hr class="my-3"/>
+        <button class="btn btn-gold btn-sm w-100 mb-2" onclick="applyFilters()"><i class="bi bi-funnel me-1"></i>Apply Filters</button>
+        <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()"><i class="bi bi-x-circle me-1"></i>Clear Filters</button>
+      </div>
+    </div>
+
+    <!-- Cards grid -->
+    <div class="col-12 col-md-9">
+      <div class="row g-4" id="posts-grid">
+        <div class="col-12 text-center py-5 text-muted" id="posts-loading">
+          <div class="spinner-border spinner-border-sm me-2"></div>Loading…
+        </div>
+      </div>
+      <div id="no-results" class="text-center py-5 d-none">
+        <div style="font-size:3rem">🔍</div>
+        <h5 class="mt-3" style="color:#1a2744">No posts found</h5>
+        <p class="text-muted">Try adjusting your search or filters.</p>
+      </div>
+      <div class="text-center mt-4">
+        <button id="load-more-btn" class="btn btn-outline-secondary px-5 d-none">
+          <i class="bi bi-plus-circle me-1"></i>Load More
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+var page = 1, totalPosts = 0, loading = false;
+var activeDept = new URLSearchParams(location.search).get('dept_id') || '';
+var searchQ = '', authorQ = '', dateQ = '';
+var grid        = document.getElementById('posts-grid');
+var loadMoreBtn = document.getElementById('load-more-btn');
+var noResults   = document.getElementById('no-results');
+
+if (activeDept) {
+  document.querySelectorAll('input[name="dept"]').forEach(function(inp) {
+    inp.checked = inp.value === activeDept;
+  });
+}
+
+function buildCard(p) {
+  var av = p.author_name ? p.author_name.charAt(0).toUpperCase() : '?';
+  return '<div class="col-12 col-sm-6 col-lg-4">' +
+    '<a href="/blog/' + p.post_id + '" class="blog-card text-decoration-none">' +
+    '<div class="blog-card-body">' +
+    '<div class="blog-card-dept">' + (p.dept_name||'') + '</div>' +
+    '<div class="blog-card-title">' + p.title + '</div>' +
+    '<div class="blog-card-excerpt">' + (p.excerpt||'') + '</div>' +
+    '<div class="blog-card-meta">' +
+    '<span class="blog-avatar">' + av + '</span>' +
+    '<span>' + p.author_name + '</span>' +
+    '<span class="ms-auto">' + fmtDate(p.created_at) + '</span>' +
+    '</div></div></a></div>';
+}
+
+function loadPosts(reset) {
+  if (loading) return;
+  loading = true;
+  if (reset) page = 1;
+  var params = 'page=' + page + '&limit=6';
+  if (activeDept) params += '&dept_id=' + encodeURIComponent(activeDept);
+  if (searchQ)    params += '&search='  + encodeURIComponent(searchQ);
+  if (authorQ)    params += '&author='  + encodeURIComponent(authorQ);
+  if (dateQ)      params += '&date='    + encodeURIComponent(dateQ);
+
+  api('/posts?' + params).then(function(data) {
+    totalPosts = data.total || 0;
+    if (reset) {
+      var loader = document.getElementById('posts-loading');
+      if (loader) loader.remove();
+      grid.querySelectorAll('.col-12.col-sm-6').forEach(function(c) { c.remove(); });
+    }
+    if (!data.posts || (!data.posts.length && page === 1)) {
+      noResults.classList.remove('d-none');
+      loadMoreBtn.classList.add('d-none');
+    } else {
+      noResults.classList.add('d-none');
+      var html = '';
+      data.posts.forEach(function(p) { html += buildCard(p); });
+      grid.insertAdjacentHTML('beforeend', html);
+    }
+    loadMoreBtn.classList.toggle('d-none', page * 6 >= totalPosts);
+    page++;
+    loading = false;
+  }).catch(function() { loading = false; });
+}
+
+function applyFilters() {
+  var deptInp = document.querySelector('input[name="dept"]:checked');
+  activeDept = deptInp ? deptInp.value : '';
+  searchQ    = document.getElementById('search-input').value.trim();
+  authorQ    = document.getElementById('author-filter').value.trim();
+  dateQ      = document.getElementById('date-filter').value;
+  loadPosts(true);
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value  = '';
+  document.getElementById('author-filter').value = '';
+  document.getElementById('date-filter').value   = '';
+  document.getElementById('dept-all').checked    = true;
+  searchQ = ''; authorQ = ''; dateQ = ''; activeDept = '';
+  loadPosts(true);
+}
+
+var searchTimer;
+document.getElementById('search-input').addEventListener('input', function(e) {
+  clearTimeout(searchTimer);
+  var val = e.target.value;
+  searchTimer = setTimeout(function() { searchQ = val; loadPosts(true); }, 450);
+});
+
+loadMoreBtn.addEventListener('click', function() { loadPosts(false); });
+loadPosts(true);
+</script>

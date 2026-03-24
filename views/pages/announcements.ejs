@@ -1,0 +1,174 @@
+<%- include('../partials/header', { title: 'Campus Announcements', activePage: 'announcements' }) %>
+
+<style>
+.search-input-group .input-group-text{border:1.5px solid #dee2e6;border-right:none;border-radius:50px 0 0 50px;}
+.search-input-group .form-control{border:1.5px solid #dee2e6;border-left:none;border-radius:0 50px 50px 0;}
+.search-input-group .form-control:focus{box-shadow:none;border-color:var(--kcic-accent);}
+.search-input-group:focus-within .input-group-text{border-color:var(--kcic-accent);}
+.ann-card{background:#fff;border:1px solid var(--kcic-border);border-radius:10px;padding:1.4rem 1.6rem;transition:box-shadow .2s;}
+.ann-card:hover{box-shadow:0 4px 18px rgba(26,39,68,.09);}
+.ann-cat{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem;}
+.ann-cat-general{color:var(--kcic-accent);}
+.ann-cat-academic{color:#7c3aed;}
+.ann-cat-event{color:#d97706;}
+.ann-cat-urgent{color:#dc2626;}
+.ann-title{font-weight:700;font-size:1rem;color:#1a2744;margin-bottom:.5rem;line-height:1.35;}
+.ann-content{font-size:.87rem;color:#4b5563;line-height:1.65;}
+.ann-meta{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:#9ca3af;margin-top:.9rem;font-weight:500;}
+</style>
+
+<section class="bg-white py-5 text-center border-bottom">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb justify-content-center small mb-0">
+        <li class="breadcrumb-item"><a href="/home" class="text-muted text-decoration-none">Home</a></li>
+        <li class="breadcrumb-item active text-muted">Announcements</li>
+      </ol>
+    </nav>
+    <h1 class="fw-bold mb-2" style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);color:#1a2744">Campus Announcements</h1>
+    <p class="text-muted mb-4" style="max-width:560px;margin:0 auto .5rem;font-size:.95rem">
+      Stay updated with official announcements, academic notices, and campus events at Kings Cornerstone International College.
+    </p>
+    <div class="mx-auto mt-3" style="max-width:540px">
+      <div class="input-group search-input-group">
+        <span class="input-group-text bg-white border-end-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" id="search-input" class="form-control border-start-0 ps-1"
+               placeholder="Search announcements..." style="border-radius:0 50px 50px 0" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5" style="background:#fafbfe">
+  <div class="container">
+
+    <!-- Static placeholders — shown before DB loads -->
+    <div class="row g-4" id="placeholder-grid">
+      <% var anns = [
+        {cat:'general', title:'Revaluation Application Window Open',
+         content:'Students who wish to apply for revaluation of their answer scripts can now submit their requests through the student portal. The last date for applications is 30th January 2026.',
+         author:'Admin', date:'13 Jan 2022'},
+        {cat:'general', title:'Symposium Fest 2026 – Registrations Open',
+         content:'The annual Symposium Fest 2026 is now open for registrations. Students from all departments are invited to participate in technical and non-technical events.',
+         author:'Admin', date:'13 Jan 2022'},
+        {cat:'general', title:'Guest Lecture on Artificial Intelligence',
+         content:'The Department of Computing is pleased to announce a guest lecture on Artificial Intelligence by industry expert Dr. Anand Rajan on 25th January 2026 at 10:00 AM in the Main Hall.',
+         author:'Admin', date:'13 Jan 2022'},
+        {cat:'academic', title:'Student Requested to Update Profile',
+         content:'All students are requested to update their profile information on the student portal before 31st January 2026 to ensure accurate records for the upcoming semester.',
+         author:'Admin', date:'14 Jan 2022'},
+        {cat:'academic', title:'Semester Exam Schedule Released',
+         content:'The semester examination schedule for January 2026 has been released. Students can check the timetable on the official portal. Exams begin from 10th February 2026.',
+         author:'Admin', date:'14 Jan 2022'},
+        {cat:'general', title:'Assignment Submission Deadline Extended',
+         content:'The deadline for assignment submissions for all departments has been extended to 20th January 2026. Students are advised to submit their work before the revised deadline.',
+         author:'Admin', date:'15 Jan 2022'},
+      ]; %>
+      <% anns.forEach(function(a) { %>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="ann-card h-100">
+          <div class="ann-cat ann-cat-<%= a.cat %>"><%= a.cat %></div>
+          <div class="ann-title"><%= a.title %></div>
+          <div class="ann-content"><%= a.content %></div>
+          <div class="ann-meta">
+            <i class="bi bi-person-circle"></i>
+            <span><%= a.author %></span>
+            <span class="ms-auto"><%= a.date %></span>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+
+    <!-- Real cards from DB — replaces placeholders -->
+    <div class="row g-4 d-none" id="real-grid"></div>
+
+    <div id="no-results" class="text-center py-5 d-none">
+      <div style="font-size:3rem">📢</div>
+      <h5 class="mt-3" style="color:#1a2744">No announcements found</h5>
+      <p class="text-muted">Try a different search term.</p>
+    </div>
+
+    <div class="text-center mt-4">
+      <button id="load-more-btn" class="btn btn-outline-secondary px-5 d-none">
+        <i class="bi bi-plus-circle me-1"></i>Load More
+      </button>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>
+
+<script>
+var page = 1, total = 0, loading = false, searchQ = '';
+var placeholderGrid = document.getElementById('placeholder-grid');
+var realGrid        = document.getElementById('real-grid');
+var loadMoreBtn     = document.getElementById('load-more-btn');
+var noResults       = document.getElementById('no-results');
+var dbLoaded        = false;
+
+function buildAnnCard(a) {
+  var html = '<div class="col-12 col-md-6 col-lg-4">';
+  html += '<div class="ann-card h-100">';
+  html += '<div class="ann-cat ann-cat-' + a.category + '">' + a.category + '</div>';
+  html += '<div class="ann-title">' + a.title + '</div>';
+  html += '<div class="ann-content">' + a.content + '</div>';
+  html += '<div class="ann-meta">';
+  html += '<i class="bi bi-person-circle"></i>';
+  html += '<span>' + a.author_name + '</span>';
+  html += '<span class="ms-auto">' + fmtDate(a.created_at) + '</span>';
+  html += '</div></div></div>';
+  return html;
+}
+
+function loadAnns(reset) {
+  if (loading) return;
+  loading = true;
+  if (reset) page = 1;
+
+  var params = 'page=' + page + '&limit=6';
+  if (searchQ) params += '&search=' + encodeURIComponent(searchQ);
+
+  api('/announcements?' + params).then(function(data) {
+    total = data.total || 0;
+
+    /* On any reset — clear EVERYTHING from real grid */
+    if (reset) {
+      realGrid.innerHTML = '';
+    }
+
+    /* Hide placeholders once DB responds (even if empty) */
+    if (!dbLoaded) {
+      placeholderGrid.classList.add('d-none');
+      realGrid.classList.remove('d-none');
+      dbLoaded = true;
+    }
+
+    if (!data.announcements || (!data.announcements.length && page === 1)) {
+      noResults.classList.remove('d-none');
+      loadMoreBtn.classList.add('d-none');
+    } else {
+      noResults.classList.add('d-none');
+      var html = '';
+      data.announcements.forEach(function(a) { html += buildAnnCard(a); });
+      realGrid.insertAdjacentHTML('beforeend', html);
+    }
+
+    loadMoreBtn.classList.toggle('d-none', page * 6 >= total);
+    page++;
+    loading = false;
+  }).catch(function() {
+    /* DB offline — keep placeholders showing */
+    loading = false;
+  });
+}
+
+var t;
+document.getElementById('search-input').addEventListener('input', function(e) {
+  clearTimeout(t);
+  var val = e.target.value;
+  t = setTimeout(function() { searchQ = val; loadAnns(true); }, 400);
+});
+loadMoreBtn.addEventListener('click', function() { loadAnns(false); });
+loadAnns(true);
+</script>

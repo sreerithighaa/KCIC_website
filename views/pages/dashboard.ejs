@@ -1,0 +1,470 @@
+<%- include('../partials/header', { title: 'Dashboard', activePage: '' }) %>
+
+<style>
+.welcome-banner{background:var(--kcic-accent-bg);border:1px solid #d4dcf7;border-radius:10px;padding:1rem 1.25rem;font-size:.92rem;color:#1a2744;}
+.user-dept{font-size:.72rem;color:var(--kcic-accent);margin-top:.15rem;font-weight:500;}
+.pending-card{background:#fff;border:1px solid var(--kcic-border);border-radius:10px;padding:1.2rem;margin-bottom:.8rem;}
+.ann-cat-general{color:var(--kcic-accent);}
+.ann-cat-academic{color:#7c3aed;}
+.ann-cat-event{color:#d97706;}
+.ann-cat-urgent{color:#dc2626;}
+</style>
+
+<div class="d-flex d-md-none align-items-center justify-content-between px-3 py-2 bg-white border-bottom">
+  <span class="fw-semibold" style="font-family:'Playfair Display',serif;color:#1a2744">Dashboard</span>
+  <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="offcanvas" data-bs-target="#dashOffcanvas">
+    <i class="bi bi-layout-sidebar-inset"></i> Menu
+  </button>
+</div>
+
+<div class="offcanvas offcanvas-start" tabindex="-1" id="dashOffcanvas" style="width:240px">
+  <div class="offcanvas-header border-bottom">
+    <h6 class="offcanvas-title fw-bold" style="font-family:'Playfair Display',serif;color:#1a2744">Navigation</h6>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <div class="user-info px-3 py-2 border-bottom">
+      <div class="user-name" id="sb-name-m">—</div>
+      <div class="user-role" id="sb-role-m">—</div>
+      <div class="user-dept" id="sb-dept-m"></div>
+    </div>
+    <nav class="dash-nav" id="dash-nav-m"></nav>
+  </div>
+</div>
+
+<div class="dash-wrapper">
+  <aside class="dash-sidebar d-none d-md-block">
+    <div class="user-info">
+      <div class="user-name" id="sb-name">—</div>
+      <div class="user-role" id="sb-role">—</div>
+      <div class="user-dept" id="sb-dept"></div>
+    </div>
+    <nav class="dash-nav" id="dash-nav"></nav>
+  </aside>
+
+  <main class="dash-main">
+    <div class="mb-4">
+      <h4 id="dash-title" style="font-family:'Playfair Display',serif;color:#1a2744">Dashboard</h4>
+    </div>
+    <div id="dash-body">
+      <div class="text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div>Loading…
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Post Modal -->
+<div class="modal fade" id="postModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold" style="font-family:'Playfair Display',serif;color:#1a2744">Submit New Blog Post</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4">
+        <div class="mb-3"><label class="form-label small fw-semibold">Title</label><input type="text" id="post-title" class="form-control" placeholder="Post title" /></div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Department</label>
+          <select id="post-dept" class="form-select">
+            <option value="">Select department</option>
+            <option value="1">Computing</option>
+            <option value="2">Business</option>
+            <option value="3">Engineering</option>
+            <option value="4">Applied Science</option>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label small fw-semibold">Content</label><textarea id="post-content" class="form-control" rows="7" placeholder="Write your blog post here..."></textarea></div>
+        <div class="mb-3"><label class="form-label small fw-semibold">Tags <span class="text-muted fw-normal">(comma separated)</span></label><input type="text" id="post-tags" class="form-control" placeholder="e.g. Technology, Research" /></div>
+      </div>
+      <div class="modal-footer border-0 px-4">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-gold px-4" onclick="submitPost()">Submit for Review</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Announcement Modal -->
+<div class="modal fade" id="annModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold" style="font-family:'Playfair Display',serif;color:#1a2744">New Announcement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4">
+        <div class="mb-3"><label class="form-label small fw-semibold">Title</label><input type="text" id="ann-title" class="form-control" placeholder="Announcement title" /></div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Category</label>
+          <select id="ann-cat" class="form-select">
+            <option value="general">General</option>
+            <option value="academic">Academic</option>
+            <option value="event">Event</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="mb-3"><label class="form-label small fw-semibold">Content</label><textarea id="ann-content" class="form-control" rows="5" placeholder="Announcement content..."></textarea></div>
+      </div>
+      <div class="modal-footer border-0 px-4">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-gold px-4" onclick="submitAnn()">Publish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+var user = Auth.user();
+if (!user) { setTimeout(function() { location.href = '/login'; }, 300); }
+
+var ROLE = { ADMIN: 1, ASSESSOR: 2, STUDENT: 3 };
+var DEPT_NAMES = { 1:'Computing', 2:'Business', 3:'Engineering', 4:'Applied Science' };
+
+function getRoleLabel() {
+  if (user.role_id === ROLE.ADMIN)    return 'Administrator';
+  if (user.role_id === ROLE.ASSESSOR) return 'Department Head';
+  if (user.role_id === ROLE.STUDENT)  return 'Student';
+  return user.role_name || '';
+}
+
+function getDeptLabel() {
+  var deptName = user.dept_name || DEPT_NAMES[user.dept_id] || '';
+  if (!deptName) return '';
+  if (user.role_id === ROLE.ASSESSOR) return deptName + ' Department Head';
+  if (user.role_id === ROLE.STUDENT)  return deptName;
+  return '';
+}
+
+['sb-name','sb-name-m'].forEach(function(id) { var el=document.getElementById(id); if(el) el.textContent=user.name||''; });
+['sb-role','sb-role-m'].forEach(function(id) { var el=document.getElementById(id); if(el) el.textContent=getRoleLabel(); });
+['sb-dept','sb-dept-m'].forEach(function(id) { var el=document.getElementById(id); if(el) el.textContent=getDeptLabel(); });
+
+var deptSel = document.getElementById('post-dept');
+if (user.dept_id && deptSel) deptSel.value = user.dept_id;
+
+function buildSidebar() {
+  var items = [{icon:'bi-speedometer2',label:'Overview',view:'overview'}];
+  if (user.role_id === ROLE.STUDENT) {
+    items.push({icon:'bi-file-text',label:'My Posts',view:'my-posts'});
+  }
+  if (user.role_id === ROLE.ASSESSOR) {
+    items.push({icon:'bi-hourglass-split',label:'Pending Posts',view:'pending'});
+    items.push({icon:'bi-journal-check',label:'Reviewed Posts',view:'reviewed'});
+    items.push({icon:'bi-megaphone',label:'Announcements',view:'ann-manage'});
+  }
+  if (user.role_id === ROLE.ADMIN) {
+    items.push({icon:'bi-people',label:'Manage Users',view:'users'});
+    items.push({icon:'bi-journals',label:'All Posts',view:'all-posts'});
+    items.push({icon:'bi-hourglass-split',label:'Pending Posts',view:'pending'});
+    items.push({icon:'bi-megaphone',label:'Announcements',view:'ann-manage'});
+  }
+  var html = '';
+  items.forEach(function(i) {
+    html += '<a href="#" onclick="loadView(\'' + i.view + '\');return false" data-view="' + i.view + '"><i class="bi ' + i.icon + '"></i> ' + i.label + '</a>';
+  });
+  document.getElementById('dash-nav').innerHTML   = html;
+  document.getElementById('dash-nav-m').innerHTML = html;
+}
+
+function setActive(view) {
+  document.querySelectorAll('.dash-nav a').forEach(function(a) {
+    a.classList.toggle('active', a.dataset.view === view);
+  });
+}
+
+function welcomeMsg() {
+  if (user.role_id === ROLE.ADMIN)    return 'Welcome back, <strong>' + user.name + '</strong>! You have full admin access to manage the platform.';
+  if (user.role_id === ROLE.ASSESSOR) return 'Welcome back, <strong>' + user.name + '</strong>! Review and approve pending blog posts from your department.';
+  return 'Welcome back, <strong>' + user.name + '</strong>! Submit academic blog posts for review and track your submissions.';
+}
+
+function loadView(view) {
+  setActive(view);
+  var body = document.getElementById('dash-body');
+  body.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>';
+  if (view === 'overview')    viewOverview();
+  else if (view === 'my-posts')   viewMyPosts();
+  else if (view === 'pending')    viewPending();
+  else if (view === 'reviewed')   viewReviewed();
+  else if (view === 'ann-manage') viewAnns();
+  else if (view === 'users')      viewUsers();
+  else if (view === 'all-posts')  viewAllPosts();
+}
+
+function statsGrid(items) {
+  var html = '<div class="row g-3 mb-4">';
+  items.forEach(function(i) {
+    html += '<div class="col-6 col-md-4 col-lg-2"><div class="stat-card"><div class="stat-value">' + i.v + '</div><div class="stat-label">' + i.l + '</div></div></div>';
+  });
+  return html + '</div>';
+}
+
+function viewOverview() {
+  document.getElementById('dash-title').textContent = 'Overview';
+  var body = document.getElementById('dash-body');
+  var banner = '<div class="welcome-banner mb-4"><p class="mb-0">' + welcomeMsg() + '</p></div>';
+
+  if (user.role_id === ROLE.ADMIN) {
+    api('/dashboard/admin/stats').then(function(s) {
+      body.innerHTML = banner + statsGrid([
+        {v:s.users.total,        l:'Total Users'},
+        {v:s.users.students,     l:'Students'},
+        {v:s.users.assessors,    l:'Assessors'},
+        {v:s.posts.total,        l:'Total Posts'},
+        {v:s.posts.pending,      l:'Pending Posts'},
+        {v:s.announcements.total,l:'Announcements'}
+      ]) +
+      '<div class="d-flex gap-2 flex-wrap">' +
+      '<button class="btn btn-gold btn-sm" onclick="loadView(\'users\')"><i class="bi bi-people me-1"></i>Manage Users</button>' +
+      '<button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'all-posts\')"><i class="bi bi-journals me-1"></i>All Posts</button>' +
+      '<button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'pending\')"><i class="bi bi-hourglass-split me-1"></i>Pending Posts</button>' +
+      '<button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'ann-manage\')"><i class="bi bi-megaphone me-1"></i>Announcements</button>' +
+      '</div>';
+    }).catch(function() { body.innerHTML = banner + '<p class="text-muted small">Could not load stats.</p>'; });
+  } else if (user.role_id === ROLE.ASSESSOR) {
+    api('/dashboard/assessor').then(function(s) {
+      body.innerHTML = banner + statsGrid([
+        {v:s.stats.pending, l:'Awaiting Review'},
+        {v:s.stats.approved,l:'Approved'},
+        {v:s.stats.rejected,l:'Rejected'}
+      ]) + '<button class="btn btn-gold btn-sm" onclick="loadView(\'pending\')"><i class="bi bi-hourglass-split me-1"></i>Review Pending Posts</button>';
+    }).catch(function() { body.innerHTML = banner + '<p class="text-muted small">Could not load stats.</p>'; });
+  } else {
+    api('/dashboard/student').then(function(s) {
+      body.innerHTML = banner + statsGrid([
+        {v:s.stats.total,    l:'My Posts'},
+        {v:s.stats.approved, l:'Approved'},
+        {v:s.stats.pending,  l:'Pending'},
+        {v:s.stats.rejected, l:'Rejected'}
+      ]) + '<button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal"><i class="bi bi-pencil me-1"></i>Write New Post</button>';
+    }).catch(function() { body.innerHTML = banner + '<p class="text-muted small">Could not load stats.</p>'; });
+  }
+}
+
+function viewMyPosts() {
+  document.getElementById('dash-title').textContent = 'My Posts';
+  var body = document.getElementById('dash-body');
+  api('/posts/my/posts').then(function(posts) {
+    if (!posts.length) {
+      body.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-journal-x" style="font-size:2rem"></i><p class="mt-2">No posts yet.</p><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal">Write Your First Post</button></div>';
+      return;
+    }
+    var rows = '';
+    posts.forEach(function(p) {
+      var token = Auth.token() || '';
+      var previewBtn = '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(token) + '" target="_blank" class="btn btn-outline-secondary btn-sm me-1" title="Preview"><i class="bi bi-eye"></i></a>';
+      var deleteBtn  = '<button class="btn btn-danger btn-sm" onclick="deletePost(' + p.post_id + ',\'my-posts\')" title="Delete"><i class="bi bi-trash"></i></button>';
+      rows += '<tr>' +
+        '<td class="small fw-semibold">' + p.title + '</td>' +
+        '<td class="small">' + p.dept_name + '</td>' +
+        '<td><span class="badge rounded-pill badge-' + p.status + '">' + p.status + '</span></td>' +
+        '<td class="small text-muted">' + fmtDate(p.created_at) + '</td>' +
+        '<td class="d-flex gap-1">' + previewBtn + deleteBtn + '</td>' +
+        '</tr>';
+    });
+    body.innerHTML = '<div class="mb-3"><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal"><i class="bi bi-pencil me-1"></i>New Post</button></div>' +
+      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
+      '<thead class="table-light"><tr>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th>' +
+      '<th></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load posts.</p>'; });
+}
+
+function viewPending() {
+  document.getElementById('dash-title').textContent = 'Pending Posts';
+  var body = document.getElementById('dash-body');
+  api('/posts/pending/all').then(function(posts) {
+    if (!posts.length) {
+      body.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-check-circle" style="font-size:2rem;color:#059669"></i><p class="mt-2">No posts awaiting review.</p></div>';
+      return;
+    }
+    var html = '';
+    posts.forEach(function(p) {
+      html += '<div class="pending-card d-flex align-items-start justify-content-between gap-3">';
+      html += '<div style="flex:1;min-width:0">';
+      html += '<div class="fw-semibold" style="color:#1a2744">' + p.title + '</div>';
+      html += '<div class="small text-muted mt-1">By ' + p.author_name + ' · ' + p.dept_name + ' · ' + fmtDate(p.created_at) + '</div>';
+      if (p.excerpt) html += '<p class="small text-muted mt-1 mb-0">' + p.excerpt + '</p>';
+      html += '</div>';
+      html += '<div class="d-flex gap-2 flex-shrink-0 align-items-start flex-wrap">';
+      var tok = Auth.token() || '';
+      html += '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(tok) + '" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye me-1"></i>Read</a>';
+      html += '<button class="btn btn-sm" style="background:#d1fae5;color:#065f46" onclick="approvePost(' + p.post_id + ')"><i class="bi bi-check-lg me-1"></i>Approve</button>';
+      html += '<button class="btn btn-danger btn-sm" onclick="rejectPost(' + p.post_id + ')"><i class="bi bi-x-lg me-1"></i>Reject</button>';
+      html += '</div></div>';
+    });
+    body.innerHTML = html;
+  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load.</p>'; });
+}
+
+function viewReviewed() {
+  document.getElementById('dash-title').textContent = 'Reviewed Posts';
+  var body = document.getElementById('dash-body');
+  api('/posts/all/admin').then(function(posts) {
+    var reviewed = posts.filter(function(p) { return p.status === 'approved' || p.status === 'rejected'; });
+    if (!reviewed.length) {
+      body.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-journal-x" style="font-size:2rem"></i><p class="mt-2">No reviewed posts yet.</p></div>';
+      return;
+    }
+    var tok = Auth.token() || '';
+    var rows = '';
+    reviewed.forEach(function(p) {
+      var previewBtn = '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(tok) + '" target="_blank" class="btn btn-outline-secondary btn-sm me-1" title="Preview"><i class="bi bi-eye"></i></a>';
+      var deleteBtn  = '<button class="btn btn-danger btn-sm" onclick="deletePost(' + p.post_id + ',\'reviewed\')" title="Delete"><i class="bi bi-trash"></i></button>';
+      rows += '<tr>' +
+        '<td class="small fw-semibold">' + p.title + '</td>' +
+        '<td class="small">' + p.author_name + '</td>' +
+        '<td class="small">' + p.dept_name + '</td>' +
+        '<td><span class="badge rounded-pill badge-' + p.status + '">' + p.status + '</span></td>' +
+        '<td class="small text-muted">' + fmtDate(p.created_at) + '</td>' +
+        '<td class="d-flex gap-1">' + previewBtn + deleteBtn + '</td>' +
+        '</tr>';
+    });
+    body.innerHTML = '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
+      '<thead class="table-light"><tr>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th>' +
+      '<th></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load.</p>'; });
+}
+
+function viewAnns() {
+  document.getElementById('dash-title').textContent = 'Manage Announcements';
+  var body = document.getElementById('dash-body');
+  api('/announcements?limit=50').then(function(data) {
+    var rows = '';
+    data.announcements.forEach(function(a) {
+      rows += '<tr><td class="small fw-semibold">' + a.title + '</td><td><span class="ann-cat-' + a.category + ' small fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em">' + a.category + '</span></td><td class="small text-muted">' + fmtDate(a.created_at) + '</td><td>' + a.author_name + '</td><td><button class="btn btn-danger btn-sm" onclick="deleteAnn(' + a.ann_id + ')"><i class="bi bi-trash"></i></button></td></tr>';
+    });
+    body.innerHTML = '<div class="mb-3"><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone me-1"></i>New Announcement</button></div>' +
+      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
+      '<thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Category</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th><th></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load.</p>'; });
+}
+
+function viewUsers() {
+  document.getElementById('dash-title').textContent = 'Manage Users';
+  var body = document.getElementById('dash-body');
+  api('/dashboard/admin/users').then(function(users) {
+    var rows = '';
+    users.forEach(function(u) {
+      var statusBadge = '<span class="badge rounded-pill ' + (u.is_active ? 'badge-approved' : 'badge-rejected') + '">' + (u.is_active ? 'Active' : 'Disabled') + '</span>';
+      var actions = '<button class="btn btn-outline-secondary btn-sm me-1" onclick="toggleUser(' + u.user_id + ')">' + (u.is_active ? 'Disable' : 'Enable') + '</button><button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.user_id + ')"><i class="bi bi-trash"></i></button>';
+      rows += '<tr><td class="small fw-semibold">' + u.name + '</td><td class="small text-muted">' + u.email + '</td><td class="small">' + u.role_name + '</td><td class="small">' + (u.dept_name||'—') + '</td><td>' + statusBadge + '</td><td class="small text-muted">' + fmtDate(u.created_at) + '</td><td>' + actions + '</td></tr>';
+    });
+    body.innerHTML = '<p class="small text-muted mb-3">Total users registered: <strong>' + users.length + '</strong></p>' +
+      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
+      '<thead class="table-light"><tr>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Name</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Email</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Role</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Joined</th>' +
+      '<th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load users.</p>'; });
+}
+
+function viewAllPosts() {
+  document.getElementById('dash-title').textContent = 'All Posts';
+  var body = document.getElementById('dash-body');
+  api('/posts/all/admin').then(function(posts) {
+    var rows = '';
+    var tok = Auth.token() || '';
+    posts.forEach(function(p) {
+      var previewBtn = '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(tok) + '" target="_blank" class="btn btn-outline-secondary btn-sm me-1" title="Preview"><i class="bi bi-eye"></i></a>';
+      var deleteBtn  = '<button class="btn btn-danger btn-sm" onclick="deletePost(' + p.post_id + ',\'all-posts\')" title="Delete"><i class="bi bi-trash"></i></button>';
+      rows += '<tr>' +
+        '<td class="small fw-semibold">' + p.title + '</td>' +
+        '<td class="small">' + p.author_name + '</td>' +
+        '<td class="small">' + p.dept_name + '</td>' +
+        '<td><span class="badge rounded-pill badge-' + p.status + '">' + p.status + '</span></td>' +
+        '<td class="small text-muted">' + fmtDate(p.created_at) + '</td>' +
+        '<td class="d-flex gap-1">' + previewBtn + deleteBtn + '</td>' +
+        '</tr>';
+    });
+    body.innerHTML = '<p class="small text-muted mb-3">Total posts: <strong>' + posts.length + '</strong></p>' +
+      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
+      '<thead class="table-light"><tr>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
+      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th>' +
+      '<th></th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load posts.</p>'; });
+}
+
+function approvePost(id) {
+  api('/posts/' + id + '/approve', {method:'PUT'}).then(function() { toast('Post approved!','success'); loadView('pending'); }).catch(function(e) { toast(e.message,'error'); });
+}
+function rejectPost(id) {
+  if (!confirm('Reject this post?')) return;
+  api('/posts/' + id + '/reject', {method:'PUT'}).then(function() { toast('Post rejected'); loadView('pending'); }).catch(function(e) { toast(e.message,'error'); });
+}
+function deletePost(id, returnView) {
+  if (!confirm('Delete this post? This cannot be undone.')) return;
+  api('/posts/' + id, {method:'DELETE'}).then(function() {
+    toast('Post deleted','success');
+    loadView(returnView || 'my-posts');
+  }).catch(function(e) { toast(e.message,'error'); });
+}
+function toggleUser(id) {
+  api('/dashboard/admin/users/' + id + '/toggle', {method:'PUT'}).then(function() { toast('Updated','success'); loadView('users'); }).catch(function(e) { toast(e.message,'error'); });
+}
+function deleteUser(id) {
+  if (!confirm('Delete this user? This cannot be undone.')) return;
+  api('/dashboard/admin/users/' + id, {method:'DELETE'}).then(function() { toast('Deleted','success'); loadView('users'); }).catch(function(e) { toast(e.message,'error'); });
+}
+function deleteAnn(id) {
+  if (!confirm('Delete this announcement?')) return;
+  api('/announcements/' + id, {method:'DELETE'}).then(function() { toast('Deleted','success'); loadView('ann-manage'); }).catch(function(e) { toast(e.message,'error'); });
+}
+
+function submitPost() {
+  var title   = document.getElementById('post-title').value.trim();
+  var dept_id = document.getElementById('post-dept').value;
+  var content = document.getElementById('post-content').value.trim();
+  var tagStr  = document.getElementById('post-tags').value;
+  var tags    = tagStr.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  if (!title || !content) { toast('Title and content required','error'); return; }
+  if (!dept_id)           { toast('Please select a department','error'); return; }
+  api('/posts', {method:'POST', body:{title:title, content:content, dept_id:parseInt(dept_id), tags:tags}}).then(function(newPost) {
+    toast('Post submitted for review!','success');
+    var m = bootstrap.Modal.getInstance(document.getElementById('postModal'));
+    if (m) m.hide();
+    ['post-title','post-content','post-tags'].forEach(function(id) { document.getElementById(id).value=''; });
+    loadView('my-posts');
+  }).catch(function(e) { toast(e.message || 'Failed to submit. Make sure you are logged in.','error'); });
+}
+
+function submitAnn() {
+  var title    = document.getElementById('ann-title').value.trim();
+  var content  = document.getElementById('ann-content').value.trim();
+  var category = document.getElementById('ann-cat').value;
+  if (!title || !content) { toast('Title and content required','error'); return; }
+  api('/announcements', {method:'POST', body:{title:title, content:content, category:category}}).then(function() {
+    toast('Announcement published!','success');
+    var m = bootstrap.Modal.getInstance(document.getElementById('annModal'));
+    if (m) m.hide();
+    loadView('ann-manage');
+  }).catch(function(e) { toast(e.message,'error'); });
+}
+
+buildSidebar();
+loadView('overview');
+</script>
