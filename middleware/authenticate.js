@@ -11,7 +11,7 @@ async function authenticate(req, reply) {
   }
   try {
     const token = auth.split(' ')[1];
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = jwt.verify(token, process.env.JWT_SECRET || 'secret');
   } catch {
     return reply.status(401).send({ error: 'Token expired or invalid' });
   }

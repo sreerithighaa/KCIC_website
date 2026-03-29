@@ -1,6 +1,7 @@
 <%- include('../partials/header', { title: 'Dashboard', activePage: '' }) %>
 
 <style>
+/* ── Existing styles ── */
 .welcome-banner{background:var(--kcic-accent-bg);border:1px solid #d4dcf7;border-radius:10px;padding:1rem 1.25rem;font-size:.92rem;color:#1a2744;}
 .user-dept{font-size:.72rem;color:var(--kcic-accent);margin-top:.15rem;font-weight:500;}
 .pending-card{background:#fff;border:1px solid var(--kcic-border);border-radius:10px;padding:1.2rem;margin-bottom:.8rem;}
@@ -8,13 +9,58 @@
 .ann-cat-academic{color:#7c3aed;}
 .ann-cat-event{color:#d97706;}
 .ann-cat-urgent{color:#dc2626;}
+
+/* ── Breadcrumb ── */
+.dash-breadcrumb{display:flex;align-items:center;gap:.3rem;font-size:.8rem;color:var(--kcic-muted);margin-bottom:.35rem;flex-wrap:wrap;}
+.dash-breadcrumb a{color:var(--kcic-accent);text-decoration:none;}
+.dash-breadcrumb a:hover{text-decoration:underline;}
+.dash-breadcrumb .bc-sep{color:#c5cad8;}
+.dash-breadcrumb .bc-current{color:var(--kcic-navy);font-weight:500;}
+
+/* ── Notification Bell ── */
+.notif-bell-wrap{position:relative;display:inline-flex;align-items:center;}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;font-size:.6rem;font-weight:700;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.notif-dropdown{position:absolute;top:calc(100% + 8px);right:0;width:300px;background:#fff;border:1px solid var(--kcic-border);border-radius:10px;box-shadow:0 8px 24px rgba(26,39,68,.14);z-index:1050;display:none;}
+.notif-dropdown.show{display:block;}
+.notif-header{padding:.75rem 1rem;border-bottom:1px solid var(--kcic-border);font-weight:600;font-size:.85rem;color:var(--kcic-navy);}
+.notif-item{padding:.65rem 1rem;border-bottom:1px solid #f1f3f8;font-size:.8rem;color:var(--kcic-navy);cursor:pointer;}
+.notif-item:hover{background:var(--kcic-accent-bg);}
+.notif-item:last-child{border-bottom:none;}
+.notif-empty{padding:1.2rem 1rem;text-align:center;color:var(--kcic-muted);font-size:.82rem;}
+.notif-item .ni-title{font-weight:500;margin-bottom:.1rem;}
+.notif-item .ni-sub{color:var(--kcic-muted);font-size:.75rem;}
+
+/* ── Search Bar ── */
+.dash-search-bar{background:#fff;border:1px solid var(--kcic-border);border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;}
+.dash-search-bar .search-inner{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;}
+.dash-search-bar input,.dash-search-bar select{border:1px solid var(--kcic-border);border-radius:8px;padding:.4rem .75rem;font-size:.84rem;color:var(--kcic-navy);background:#fff;outline:none;}
+.dash-search-bar input:focus,.dash-search-bar select:focus{border-color:var(--kcic-accent);box-shadow:0 0 0 3px rgba(79,111,209,.12);}
+.dash-search-bar input[type=text]{flex:1;min-width:140px;}
+.dash-search-bar .btn-search{background:var(--kcic-accent);color:#fff;border:none;border-radius:8px;padding:.4rem 1rem;font-size:.84rem;cursor:pointer;white-space:nowrap;}
+.dash-search-bar .btn-search:hover{background:#3d5abf;}
+.dash-search-bar .btn-clear-search{background:transparent;color:var(--kcic-muted);border:1px solid var(--kcic-border);border-radius:8px;padding:.4rem .75rem;font-size:.82rem;cursor:pointer;}
+.dash-search-bar .btn-clear-search:hover{color:var(--kcic-navy);border-color:#aaa;}
+.search-result-count{font-size:.8rem;color:var(--kcic-muted);margin-bottom:.5rem;}
 </style>
 
+<!-- Mobile top bar -->
 <div class="d-flex d-md-none align-items-center justify-content-between px-3 py-2 bg-white border-bottom">
   <span class="fw-semibold" style="font-family:'Playfair Display',serif;color:#1a2744">Dashboard</span>
-  <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="offcanvas" data-bs-target="#dashOffcanvas">
-    <i class="bi bi-layout-sidebar-inset"></i> Menu
-  </button>
+  <div class="d-flex align-items-center gap-2">
+    <div class="notif-bell-wrap" id="notif-wrap-m">
+      <button class="btn btn-outline-secondary btn-sm" onclick="toggleNotif('m')" title="Notifications">
+        <i class="bi bi-bell"></i>
+      </button>
+      <span class="notif-badge d-none" id="notif-badge-m">0</span>
+      <div class="notif-dropdown" id="notif-dropdown-m">
+        <div class="notif-header"><i class="bi bi-bell me-1"></i>Notifications</div>
+        <div id="notif-list-m"><div class="notif-empty">Loading…</div></div>
+      </div>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="offcanvas" data-bs-target="#dashOffcanvas">
+      <i class="bi bi-layout-sidebar-inset"></i> Menu
+    </button>
+  </div>
 </div>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="dashOffcanvas" style="width:240px">
@@ -43,9 +89,28 @@
   </aside>
 
   <main class="dash-main">
-    <div class="mb-4">
-      <h4 id="dash-title" style="font-family:'Playfair Display',serif;color:#1a2744">Dashboard</h4>
+    <!-- Header: breadcrumb + notification bell -->
+    <div class="d-flex align-items-start justify-content-between mb-2 flex-wrap gap-2">
+      <div>
+        <nav class="dash-breadcrumb" id="dash-breadcrumb" aria-label="breadcrumb">
+          <a href="#" onclick="loadView('overview');return false">Dashboard</a>
+          <span class="bc-sep">&#8250;</span>
+          <span class="bc-current" id="bc-current">Overview</span>
+        </nav>
+        <h4 id="dash-title" style="font-family:'Playfair Display',serif;color:#1a2744;margin-bottom:0">Dashboard</h4>
+      </div>
+      <div class="notif-bell-wrap d-none d-md-flex" id="notif-wrap">
+        <button class="btn btn-outline-secondary btn-sm" onclick="toggleNotif('')" title="Notifications">
+          <i class="bi bi-bell me-1"></i>Notifications
+        </button>
+        <span class="notif-badge d-none" id="notif-badge">0</span>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header"><i class="bi bi-bell me-1"></i>Notifications</div>
+          <div id="notif-list"><div class="notif-empty">Loading…</div></div>
+        </div>
+      </div>
     </div>
+
     <div id="dash-body">
       <div class="text-center py-5 text-muted">
         <div class="spinner-border spinner-border-sm me-2"></div>Loading…
@@ -123,348 +188,384 @@ if (!user) { setTimeout(function() { location.href = '/login'; }, 300); }
 var ROLE = { ADMIN: 1, ASSESSOR: 2, STUDENT: 3 };
 var DEPT_NAMES = { 1:'Computing', 2:'Business', 3:'Engineering', 4:'Applied Science' };
 
-function getRoleLabel() {
-  if (user.role_id === ROLE.ADMIN)    return 'Administrator';
-  if (user.role_id === ROLE.ASSESSOR) return 'Department Head';
-  if (user.role_id === ROLE.STUDENT)  return 'Student';
-  return user.role_name || '';
+/* ── BREADCRUMB ── */
+var VIEW_LABELS = {
+  'overview':'Overview','my-posts':'My Posts','pending':'Pending Posts',
+  'reviewed':'Reviewed Posts','ann-manage':'Announcements','users':'Manage Users','all-posts':'All Posts'
+};
+function setBreadcrumb(view) {
+  var el = document.getElementById('bc-current');
+  if (el) el.textContent = VIEW_LABELS[view] || view;
 }
 
+/* ── NOTIFICATIONS ── */
+var _notifData = [];
+function loadNotifications() {
+  var endpoint = user.role_id === ROLE.ADMIN ? '/dashboard/admin/stats'
+               : user.role_id === ROLE.ASSESSOR ? '/dashboard/assessor'
+               : '/dashboard/student';
+  api(endpoint).then(function(s) {
+    var notifs = [];
+    if (user.role_id === ROLE.ADMIN) {
+      if (s.posts && s.posts.pending > 0)         notifs.push({title: s.posts.pending + ' posts awaiting review', sub:'Click to review', view:'pending'});
+      if (s.users && s.users.total > 0)            notifs.push({title: s.users.total + ' registered users', sub:'Manage platform users', view:'users'});
+      if (s.announcements && s.announcements.total > 0) notifs.push({title: s.announcements.total + ' announcements', sub:'Manage announcements', view:'ann-manage'});
+    } else if (user.role_id === ROLE.ASSESSOR) {
+      if (s.stats && s.stats.pending > 0)  notifs.push({title: s.stats.pending + ' posts need your review', sub:'Review pending posts', view:'pending'});
+      if (s.stats && s.stats.approved > 0) notifs.push({title: s.stats.approved + ' posts approved', sub:'View reviewed posts', view:'reviewed'});
+    } else {
+      if (s.stats && s.stats.pending > 0)  notifs.push({title: s.stats.pending + ' post(s) pending review', sub:'Awaiting approval', view:'my-posts'});
+      if (s.stats && s.stats.approved > 0) notifs.push({title: s.stats.approved + ' post(s) approved!', sub:'View your posts', view:'my-posts'});
+      if (s.stats && s.stats.rejected > 0) notifs.push({title: s.stats.rejected + ' post(s) rejected', sub:'Check your posts', view:'my-posts'});
+    }
+    _notifData = notifs;
+    renderNotifications();
+  }).catch(function() {});
+}
+function renderNotifications() {
+  var count = _notifData.length;
+  ['notif-badge','notif-badge-m'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) { el.textContent = count; el.classList.remove('d-none'); } else { el.classList.add('d-none'); }
+  });
+  ['notif-list','notif-list-m'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (!_notifData.length) { el.innerHTML = '<div class="notif-empty"><i class="bi bi-check-circle text-success me-1"></i>No new notifications</div>'; return; }
+    el.innerHTML = _notifData.map(function(n) {
+      return '<div class="notif-item" onclick="loadView(\'' + n.view + '\');closeNotif()">' +
+        '<div class="ni-title">' + n.title + '</div><div class="ni-sub">' + n.sub + '</div></div>';
+    }).join('');
+  });
+}
+function toggleNotif(suffix) {
+  var dd = document.getElementById('notif-dropdown' + (suffix ? '-'+suffix : ''));
+  if (!dd) return;
+  var isOpen = dd.classList.contains('show');
+  closeNotif();
+  if (!isOpen) dd.classList.add('show');
+}
+function closeNotif() { document.querySelectorAll('.notif-dropdown').forEach(function(d){d.classList.remove('show');}); }
+document.addEventListener('click', function(e){ if(!e.target.closest('.notif-bell-wrap')) closeNotif(); });
+
+/* ── SEARCH HELPERS ── */
+function buildSearchBar(cfg) {
+  var inner = '';
+  cfg.fields.forEach(function(f) {
+    if (f.type === 'select') {
+      var opts = '<option value="">All ' + f.label + '</option>';
+      (f.options||[]).forEach(function(o){ opts += '<option value="'+o.v+'">'+o.l+'</option>'; });
+      inner += '<select id="'+f.id+'">'+opts+'</select>';
+    } else {
+      inner += '<input type="text" id="'+f.id+'" placeholder="'+(f.placeholder||'Search...')+'" />';
+    }
+  });
+  inner += '<button class="btn-search" onclick="'+cfg.onSearch+'"><i class="bi bi-search me-1"></i>Search</button>';
+  inner += '<button class="btn-clear-search" onclick="'+cfg.onClear+'">Clear</button>';
+  return '<div class="dash-search-bar"><div class="search-inner">'+inner+'</div></div>';
+}
+function getVal(id) { var el=document.getElementById(id); return el ? el.value.trim().toLowerCase() : ''; }
+function clearSearch(ids) { ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; }); }
+function filterPosts(posts, titleId, authorId, deptId, dateId) {
+  var title  = titleId  ? getVal(titleId)  : '';
+  var author = authorId ? getVal(authorId) : '';
+  var dept   = deptId   ? getVal(deptId)   : '';
+  var date   = dateId   ? getVal(dateId)   : '';
+  return posts.filter(function(p) {
+    if (title  && !(p.title       ||'').toLowerCase().includes(title))  return false;
+    if (author && !(p.author_name ||'').toLowerCase().includes(author)) return false;
+    if (dept   && String(p.dept_id) !== dept && !(p.dept_name||'').toLowerCase().includes(dept)) return false;
+    if (date) { var d = p.created_at ? new Date(p.created_at).toISOString().slice(0,10) : ''; if(!d.includes(date)) return false; }
+    return true;
+  });
+}
+function showCount(id, shown, total, label) {
+  var el=document.getElementById(id); if(el) el.textContent='Showing '+shown+' of '+total+' '+(label||'items');
+}
+function noResultsHtml() { return '<div class="text-center py-4 text-muted"><i class="bi bi-search me-1"></i>No items match your search.</div>'; }
+
+/* ── ROLE / SIDEBAR ── */
+function getRoleLabel() {
+  if (user.role_id===ROLE.ADMIN) return 'Administrator';
+  if (user.role_id===ROLE.ASSESSOR) return 'Department Head';
+  if (user.role_id===ROLE.STUDENT) return 'Student';
+  return user.role_name||'';
+}
 function getDeptLabel() {
-  var deptName = user.dept_name || DEPT_NAMES[user.dept_id] || '';
-  if (!deptName) return '';
-  if (user.role_id === ROLE.ASSESSOR) return deptName + ' Department Head';
-  if (user.role_id === ROLE.STUDENT)  return deptName;
+  var d=user.dept_name||DEPT_NAMES[user.dept_id]||'';
+  if (!d) return '';
+  if (user.role_id===ROLE.ASSESSOR) return d+' Department Head';
+  if (user.role_id===ROLE.STUDENT) return d;
   return '';
 }
-
-['sb-name','sb-name-m'].forEach(function(id) { var el=document.getElementById(id); if(el) el.textContent=user.name||''; });
-['sb-role','sb-role-m'].forEach(function(id) { var el=document.getElementById(id); if(el) el.textContent=getRoleLabel(); });
-['sb-dept','sb-dept-m'].forEach(function(id) { var el=document.getElementById(id); if(el) el.textContent=getDeptLabel(); });
-
-var deptSel = document.getElementById('post-dept');
-if (user.dept_id && deptSel) deptSel.value = user.dept_id;
+['sb-name','sb-name-m'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=user.name||'';});
+['sb-role','sb-role-m'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=getRoleLabel();});
+['sb-dept','sb-dept-m'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=getDeptLabel();});
+var deptSel=document.getElementById('post-dept'); if(user.dept_id&&deptSel) deptSel.value=user.dept_id;
 
 function buildSidebar() {
-  var items = [{icon:'bi-speedometer2',label:'Overview',view:'overview'}];
-  if (user.role_id === ROLE.STUDENT) {
-    items.push({icon:'bi-file-text',label:'My Posts',view:'my-posts'});
-  }
-  if (user.role_id === ROLE.ASSESSOR) {
-    items.push({icon:'bi-hourglass-split',label:'Pending Posts',view:'pending'});
-    items.push({icon:'bi-journal-check',label:'Reviewed Posts',view:'reviewed'});
-    items.push({icon:'bi-megaphone',label:'Announcements',view:'ann-manage'});
-  }
-  if (user.role_id === ROLE.ADMIN) {
-    items.push({icon:'bi-people',label:'Manage Users',view:'users'});
-    items.push({icon:'bi-journals',label:'All Posts',view:'all-posts'});
-    items.push({icon:'bi-hourglass-split',label:'Pending Posts',view:'pending'});
-    items.push({icon:'bi-megaphone',label:'Announcements',view:'ann-manage'});
-  }
-  var html = '';
-  items.forEach(function(i) {
-    html += '<a href="#" onclick="loadView(\'' + i.view + '\');return false" data-view="' + i.view + '"><i class="bi ' + i.icon + '"></i> ' + i.label + '</a>';
-  });
-  document.getElementById('dash-nav').innerHTML   = html;
-  document.getElementById('dash-nav-m').innerHTML = html;
+  var items=[{icon:'bi-speedometer2',label:'Overview',view:'overview'}];
+  if (user.role_id===ROLE.STUDENT)   items.push({icon:'bi-file-text',label:'My Posts',view:'my-posts'});
+  if (user.role_id===ROLE.ASSESSOR) { items.push({icon:'bi-hourglass-split',label:'Pending Posts',view:'pending'}); items.push({icon:'bi-journal-check',label:'Reviewed Posts',view:'reviewed'}); items.push({icon:'bi-megaphone',label:'Announcements',view:'ann-manage'}); }
+  if (user.role_id===ROLE.ADMIN)    { items.push({icon:'bi-people',label:'Manage Users',view:'users'}); items.push({icon:'bi-journals',label:'All Posts',view:'all-posts'}); items.push({icon:'bi-hourglass-split',label:'Pending Posts',view:'pending'}); items.push({icon:'bi-megaphone',label:'Announcements',view:'ann-manage'}); }
+  var html='';
+  items.forEach(function(i){ html+='<a href="#" onclick="loadView(\''+i.view+'\');return false" data-view="'+i.view+'"><i class="bi '+i.icon+'"></i> '+i.label+'</a>'; });
+  document.getElementById('dash-nav').innerHTML=html;
+  document.getElementById('dash-nav-m').innerHTML=html;
 }
-
-function setActive(view) {
-  document.querySelectorAll('.dash-nav a').forEach(function(a) {
-    a.classList.toggle('active', a.dataset.view === view);
-  });
-}
-
+function setActive(view) { document.querySelectorAll('.dash-nav a').forEach(function(a){a.classList.toggle('active',a.dataset.view===view);}); }
 function welcomeMsg() {
-  if (user.role_id === ROLE.ADMIN)    return 'Welcome back, <strong>' + user.name + '</strong>! You have full admin access to manage the platform.';
-  if (user.role_id === ROLE.ASSESSOR) return 'Welcome back, <strong>' + user.name + '</strong>! Review and approve pending blog posts from your department.';
-  return 'Welcome back, <strong>' + user.name + '</strong>! Submit academic blog posts for review and track your submissions.';
+  if (user.role_id===ROLE.ADMIN)    return 'Welcome back, <strong>'+user.name+'</strong>! You have full admin access to manage the platform.';
+  if (user.role_id===ROLE.ASSESSOR) return 'Welcome back, <strong>'+user.name+'</strong>! Review and approve pending blog posts from your department.';
+  return 'Welcome back, <strong>'+user.name+'</strong>! Submit academic blog posts for review and track your submissions.';
 }
-
 function loadView(view) {
-  setActive(view);
-  var body = document.getElementById('dash-body');
-  body.innerHTML = '<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading…</div>';
-  if (view === 'overview')    viewOverview();
-  else if (view === 'my-posts')   viewMyPosts();
-  else if (view === 'pending')    viewPending();
-  else if (view === 'reviewed')   viewReviewed();
-  else if (view === 'ann-manage') viewAnns();
-  else if (view === 'users')      viewUsers();
-  else if (view === 'all-posts')  viewAllPosts();
+  setActive(view); setBreadcrumb(view);
+  document.getElementById('dash-body').innerHTML='<div class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Loading\u2026</div>';
+  if (view==='overview')    viewOverview();
+  else if (view==='my-posts')   viewMyPosts();
+  else if (view==='pending')    viewPending();
+  else if (view==='reviewed')   viewReviewed();
+  else if (view==='ann-manage') viewAnns();
+  else if (view==='users')      viewUsers();
+  else if (view==='all-posts')  viewAllPosts();
 }
-
 function statsGrid(items) {
-  var html = '<div class="row g-3 mb-4">';
-  items.forEach(function(i) {
-    html += '<div class="col-6 col-md-4 col-lg-2"><div class="stat-card"><div class="stat-value">' + i.v + '</div><div class="stat-label">' + i.l + '</div></div></div>';
-  });
-  return html + '</div>';
+  var html='<div class="row g-3 mb-4">';
+  items.forEach(function(i){ html+='<div class="col-6 col-md-4 col-lg-2"><div class="stat-card"><div class="stat-value">'+i.v+'</div><div class="stat-label">'+i.l+'</div></div></div>'; });
+  return html+'</div>';
 }
 
+/* ── OVERVIEW ── */
 function viewOverview() {
-  document.getElementById('dash-title').textContent = 'Overview';
-  var body = document.getElementById('dash-body');
-  var banner = '<div class="welcome-banner mb-4"><p class="mb-0">' + welcomeMsg() + '</p></div>';
-
-  if (user.role_id === ROLE.ADMIN) {
-    api('/dashboard/admin/stats').then(function(s) {
-      body.innerHTML = banner + statsGrid([
-        {v:s.users.total,        l:'Total Users'},
-        {v:s.users.students,     l:'Students'},
-        {v:s.users.assessors,    l:'Assessors'},
-        {v:s.posts.total,        l:'Total Posts'},
-        {v:s.posts.pending,      l:'Pending Posts'},
-        {v:s.announcements.total,l:'Announcements'}
-      ]) +
-      '<div class="d-flex gap-2 flex-wrap">' +
-      '<button class="btn btn-gold btn-sm" onclick="loadView(\'users\')"><i class="bi bi-people me-1"></i>Manage Users</button>' +
-      '<button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'all-posts\')"><i class="bi bi-journals me-1"></i>All Posts</button>' +
-      '<button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'pending\')"><i class="bi bi-hourglass-split me-1"></i>Pending Posts</button>' +
-      '<button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'ann-manage\')"><i class="bi bi-megaphone me-1"></i>Announcements</button>' +
-      '</div>';
-    }).catch(function() { body.innerHTML = banner + '<p class="text-muted small">Could not load stats.</p>'; });
-  } else if (user.role_id === ROLE.ASSESSOR) {
-    api('/dashboard/assessor').then(function(s) {
-      body.innerHTML = banner + statsGrid([
-        {v:s.stats.pending, l:'Awaiting Review'},
-        {v:s.stats.approved,l:'Approved'},
-        {v:s.stats.rejected,l:'Rejected'}
-      ]) + '<button class="btn btn-gold btn-sm" onclick="loadView(\'pending\')"><i class="bi bi-hourglass-split me-1"></i>Review Pending Posts</button>';
-    }).catch(function() { body.innerHTML = banner + '<p class="text-muted small">Could not load stats.</p>'; });
+  document.getElementById('dash-title').textContent='Overview';
+  var body=document.getElementById('dash-body');
+  var banner='<div class="welcome-banner mb-4"><p class="mb-0">'+welcomeMsg()+'</p></div>';
+  if (user.role_id===ROLE.ADMIN) {
+    api('/dashboard/admin/stats').then(function(s){
+      body.innerHTML=banner+statsGrid([{v:s.users.total,l:'Total Users'},{v:s.users.students,l:'Students'},{v:s.users.assessors,l:'Assessors'},{v:s.posts.total,l:'Total Posts'},{v:s.posts.pending,l:'Pending Posts'},{v:s.announcements.total,l:'Announcements'}])+
+      '<div class="d-flex gap-2 flex-wrap"><button class="btn btn-gold btn-sm" onclick="loadView(\'users\')"><i class="bi bi-people me-1"></i>Manage Users</button><button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'all-posts\')"><i class="bi bi-journals me-1"></i>All Posts</button><button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'pending\')"><i class="bi bi-hourglass-split me-1"></i>Pending Posts</button><button class="btn btn-outline-secondary btn-sm" onclick="loadView(\'ann-manage\')"><i class="bi bi-megaphone me-1"></i>Announcements</button></div>';
+    }).catch(function(){body.innerHTML=banner+'<p class="text-muted small">Could not load stats.</p>';});
+  } else if (user.role_id===ROLE.ASSESSOR) {
+    api('/dashboard/assessor').then(function(s){
+      body.innerHTML=banner+statsGrid([{v:s.stats.pending,l:'Awaiting Review'},{v:s.stats.approved,l:'Approved'},{v:s.stats.rejected,l:'Rejected'}])+'<button class="btn btn-gold btn-sm" onclick="loadView(\'pending\')"><i class="bi bi-hourglass-split me-1"></i>Review Pending Posts</button>';
+    }).catch(function(){body.innerHTML=banner+'<p class="text-muted small">Could not load stats.</p>';});
   } else {
-    api('/dashboard/student').then(function(s) {
-      body.innerHTML = banner + statsGrid([
-        {v:s.stats.total,    l:'My Posts'},
-        {v:s.stats.approved, l:'Approved'},
-        {v:s.stats.pending,  l:'Pending'},
-        {v:s.stats.rejected, l:'Rejected'}
-      ]) + '<button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal"><i class="bi bi-pencil me-1"></i>Write New Post</button>';
-    }).catch(function() { body.innerHTML = banner + '<p class="text-muted small">Could not load stats.</p>'; });
+    api('/dashboard/student').then(function(s){
+      body.innerHTML=banner+statsGrid([{v:s.stats.total,l:'My Posts'},{v:s.stats.approved,l:'Approved'},{v:s.stats.pending,l:'Pending'},{v:s.stats.rejected,l:'Rejected'}])+'<button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal"><i class="bi bi-pencil me-1"></i>Write New Post</button>';
+    }).catch(function(){body.innerHTML=banner+'<p class="text-muted small">Could not load stats.</p>';});
   }
 }
 
+/* ── MY POSTS (Student) ── */
+var _myPosts=[];
 function viewMyPosts() {
-  document.getElementById('dash-title').textContent = 'My Posts';
-  var body = document.getElementById('dash-body');
-  api('/posts/my/posts').then(function(posts) {
-    if (!posts.length) {
-      body.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-journal-x" style="font-size:2rem"></i><p class="mt-2">No posts yet.</p><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal">Write Your First Post</button></div>';
-      return;
-    }
-    var rows = '';
-    posts.forEach(function(p) {
-      var token = Auth.token() || '';
-      var previewBtn = '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(token) + '" target="_blank" class="btn btn-outline-secondary btn-sm me-1" title="Preview"><i class="bi bi-eye"></i></a>';
-      var deleteBtn  = '<button class="btn btn-danger btn-sm" onclick="deletePost(' + p.post_id + ',\'my-posts\')" title="Delete"><i class="bi bi-trash"></i></button>';
-      rows += '<tr>' +
-        '<td class="small fw-semibold">' + p.title + '</td>' +
-        '<td class="small">' + p.dept_name + '</td>' +
-        '<td><span class="badge rounded-pill badge-' + p.status + '">' + p.status + '</span></td>' +
-        '<td class="small text-muted">' + fmtDate(p.created_at) + '</td>' +
-        '<td class="d-flex gap-1">' + previewBtn + deleteBtn + '</td>' +
-        '</tr>';
-    });
-    body.innerHTML = '<div class="mb-3"><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal"><i class="bi bi-pencil me-1"></i>New Post</button></div>' +
-      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
-      '<thead class="table-light"><tr>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th>' +
-      '<th></th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table></div>';
-  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load posts.</p>'; });
+  document.getElementById('dash-title').textContent='My Posts';
+  var body=document.getElementById('dash-body');
+  api('/posts/my/posts').then(function(posts){
+    _myPosts=posts;
+    if (!posts.length){ body.innerHTML='<div class="text-center py-5 text-muted"><i class="bi bi-journal-x" style="font-size:2rem"></i><p class="mt-2">No posts yet.</p><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal">Write Your First Post</button></div>'; return; }
+    body.innerHTML=
+      '<div class="mb-3"><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#postModal"><i class="bi bi-pencil me-1"></i>New Post</button></div>'+
+      buildSearchBar({fields:[{type:'text',id:'mp-q',placeholder:'Search by title\u2026'},{type:'select',id:'mp-dept',label:'Departments',options:[{v:'1',l:'Computing'},{v:'2',l:'Business'},{v:'3',l:'Engineering'},{v:'4',l:'Applied Science'}]},{type:'text',id:'mp-date',placeholder:'Date (YYYY-MM-DD)'}],onSearch:'renderMyPosts()',onClear:'clearSearch([\'mp-q\',\'mp-dept\',\'mp-date\']);renderMyPosts()'})+
+      '<div id="mp-count" class="search-result-count"></div><div id="mp-wrap"></div>';
+    renderMyPosts();
+  }).catch(function(){document.getElementById('dash-body').innerHTML='<p class="text-muted">Failed to load posts.</p>';});
+}
+function renderMyPosts(){
+  var f=filterPosts(_myPosts,'mp-q',null,'mp-dept','mp-date');
+  showCount('mp-count',f.length,_myPosts.length,'posts');
+  var wrap=document.getElementById('mp-wrap'); if(!wrap)return;
+  if(!f.length){wrap.innerHTML=noResultsHtml();return;}
+  var rows='';
+  f.forEach(function(p){
+    var tok=Auth.token()||'';
+    rows+='<tr><td class="small fw-semibold">'+p.title+'</td><td class="small">'+p.dept_name+'</td><td><span class="badge rounded-pill badge-'+p.status+'">'+p.status+'</span></td><td class="small text-muted">'+fmtDate(p.created_at)+'</td><td class="d-flex gap-1"><a href="/blog/'+p.post_id+'?token='+encodeURIComponent(tok)+'" target="_blank" class="btn btn-outline-secondary btn-sm me-1"><i class="bi bi-eye"></i></a><button class="btn btn-danger btn-sm" onclick="deletePost('+p.post_id+',\'my-posts\')"><i class="bi bi-trash"></i></button></td></tr>';
+  });
+  wrap.innerHTML='<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0"><thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-function viewPending() {
-  document.getElementById('dash-title').textContent = 'Pending Posts';
-  var body = document.getElementById('dash-body');
-  api('/posts/pending/all').then(function(posts) {
-    if (!posts.length) {
-      body.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-check-circle" style="font-size:2rem;color:#059669"></i><p class="mt-2">No posts awaiting review.</p></div>';
-      return;
-    }
-    var html = '';
-    posts.forEach(function(p) {
-      html += '<div class="pending-card d-flex align-items-start justify-content-between gap-3">';
-      html += '<div style="flex:1;min-width:0">';
-      html += '<div class="fw-semibold" style="color:#1a2744">' + p.title + '</div>';
-      html += '<div class="small text-muted mt-1">By ' + p.author_name + ' · ' + p.dept_name + ' · ' + fmtDate(p.created_at) + '</div>';
-      if (p.excerpt) html += '<p class="small text-muted mt-1 mb-0">' + p.excerpt + '</p>';
-      html += '</div>';
-      html += '<div class="d-flex gap-2 flex-shrink-0 align-items-start flex-wrap">';
-      var tok = Auth.token() || '';
-      html += '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(tok) + '" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye me-1"></i>Read</a>';
-      html += '<button class="btn btn-sm" style="background:#d1fae5;color:#065f46" onclick="approvePost(' + p.post_id + ')"><i class="bi bi-check-lg me-1"></i>Approve</button>';
-      html += '<button class="btn btn-danger btn-sm" onclick="rejectPost(' + p.post_id + ')"><i class="bi bi-x-lg me-1"></i>Reject</button>';
-      html += '</div></div>';
-    });
-    body.innerHTML = html;
-  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load.</p>'; });
+/* ── PENDING POSTS ── */
+var _pendingPosts=[];
+function viewPending(){
+  document.getElementById('dash-title').textContent='Pending Posts';
+  var body=document.getElementById('dash-body');
+  api('/posts/pending/all').then(function(posts){
+    _pendingPosts=posts;
+    if(!posts.length){body.innerHTML='<div class="text-center py-5 text-muted"><i class="bi bi-check-circle" style="font-size:2rem;color:#059669"></i><p class="mt-2">No posts awaiting review.</p></div>';return;}
+    body.innerHTML=
+      buildSearchBar({fields:[{type:'text',id:'pp-q',placeholder:'Search by title\u2026'},{type:'text',id:'pp-author',placeholder:'Search by author\u2026'},{type:'select',id:'pp-dept',label:'Departments',options:[{v:'1',l:'Computing'},{v:'2',l:'Business'},{v:'3',l:'Engineering'},{v:'4',l:'Applied Science'}]},{type:'text',id:'pp-date',placeholder:'Date (YYYY-MM-DD)'}],onSearch:'renderPending()',onClear:'clearSearch([\'pp-q\',\'pp-author\',\'pp-dept\',\'pp-date\']);renderPending()'})+
+      '<div id="pp-count" class="search-result-count"></div><div id="pp-wrap"></div>';
+    renderPending();
+  }).catch(function(){document.getElementById('dash-body').innerHTML='<p class="text-muted">Failed to load.</p>';});
+}
+function renderPending(){
+  var f=filterPosts(_pendingPosts,'pp-q','pp-author','pp-dept','pp-date');
+  showCount('pp-count',f.length,_pendingPosts.length,'posts');
+  var wrap=document.getElementById('pp-wrap'); if(!wrap)return;
+  if(!f.length){wrap.innerHTML=noResultsHtml();return;}
+  var html='';
+  f.forEach(function(p){
+    var tok=Auth.token()||'';
+    html+='<div class="pending-card d-flex align-items-start justify-content-between gap-3"><div style="flex:1;min-width:0"><div class="fw-semibold" style="color:#1a2744">'+p.title+'</div><div class="small text-muted mt-1">By '+p.author_name+' \u00b7 '+p.dept_name+' \u00b7 '+fmtDate(p.created_at)+'</div>'+(p.excerpt?'<p class="small text-muted mt-1 mb-0">'+p.excerpt+'</p>':'')+'</div><div class="d-flex gap-2 flex-shrink-0 align-items-start flex-wrap"><a href="/blog/'+p.post_id+'?token='+encodeURIComponent(tok)+'" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye me-1"></i>Read</a><button class="btn btn-sm" style="background:#d1fae5;color:#065f46" onclick="approvePost('+p.post_id+')"><i class="bi bi-check-lg me-1"></i>Approve</button><button class="btn btn-danger btn-sm" onclick="rejectPost('+p.post_id+')"><i class="bi bi-x-lg me-1"></i>Reject</button></div></div>';
+  });
+  wrap.innerHTML=html;
 }
 
-function viewReviewed() {
-  document.getElementById('dash-title').textContent = 'Reviewed Posts';
-  var body = document.getElementById('dash-body');
-  api('/posts/all/admin').then(function(posts) {
-    var reviewed = posts.filter(function(p) { return p.status === 'approved' || p.status === 'rejected'; });
-    if (!reviewed.length) {
-      body.innerHTML = '<div class="text-center py-5 text-muted"><i class="bi bi-journal-x" style="font-size:2rem"></i><p class="mt-2">No reviewed posts yet.</p></div>';
-      return;
-    }
-    var tok = Auth.token() || '';
-    var rows = '';
-    reviewed.forEach(function(p) {
-      var previewBtn = '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(tok) + '" target="_blank" class="btn btn-outline-secondary btn-sm me-1" title="Preview"><i class="bi bi-eye"></i></a>';
-      var deleteBtn  = '<button class="btn btn-danger btn-sm" onclick="deletePost(' + p.post_id + ',\'reviewed\')" title="Delete"><i class="bi bi-trash"></i></button>';
-      rows += '<tr>' +
-        '<td class="small fw-semibold">' + p.title + '</td>' +
-        '<td class="small">' + p.author_name + '</td>' +
-        '<td class="small">' + p.dept_name + '</td>' +
-        '<td><span class="badge rounded-pill badge-' + p.status + '">' + p.status + '</span></td>' +
-        '<td class="small text-muted">' + fmtDate(p.created_at) + '</td>' +
-        '<td class="d-flex gap-1">' + previewBtn + deleteBtn + '</td>' +
-        '</tr>';
-    });
-    body.innerHTML = '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
-      '<thead class="table-light"><tr>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th>' +
-      '<th></th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table></div>';
-  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load.</p>'; });
+/* ── REVIEWED POSTS ── */
+var _reviewedPosts=[];
+function viewReviewed(){
+  document.getElementById('dash-title').textContent='Reviewed Posts';
+  var body=document.getElementById('dash-body');
+  api('/posts/all/admin').then(function(posts){
+    _reviewedPosts=posts.filter(function(p){return p.status==='approved'||p.status==='rejected';});
+    if(!_reviewedPosts.length){body.innerHTML='<div class="text-center py-5 text-muted"><i class="bi bi-journal-x" style="font-size:2rem"></i><p class="mt-2">No reviewed posts yet.</p></div>';return;}
+    body.innerHTML=
+      buildSearchBar({fields:[{type:'text',id:'rv-q',placeholder:'Search by title\u2026'},{type:'text',id:'rv-author',placeholder:'Search by author\u2026'},{type:'select',id:'rv-dept',label:'Departments',options:[{v:'1',l:'Computing'},{v:'2',l:'Business'},{v:'3',l:'Engineering'},{v:'4',l:'Applied Science'}]},{type:'text',id:'rv-date',placeholder:'Date (YYYY-MM-DD)'}],onSearch:'renderReviewed()',onClear:'clearSearch([\'rv-q\',\'rv-author\',\'rv-dept\',\'rv-date\']);renderReviewed()'})+
+      '<div id="rv-count" class="search-result-count"></div><div id="rv-wrap"></div>';
+    renderReviewed();
+  }).catch(function(){document.getElementById('dash-body').innerHTML='<p class="text-muted">Failed to load.</p>';});
+}
+function renderReviewed(){
+  var f=filterPosts(_reviewedPosts,'rv-q','rv-author','rv-dept','rv-date');
+  showCount('rv-count',f.length,_reviewedPosts.length,'posts');
+  var tok=Auth.token()||''; var wrap=document.getElementById('rv-wrap'); if(!wrap)return;
+  if(!f.length){wrap.innerHTML=noResultsHtml();return;}
+  var rows='';
+  f.forEach(function(p){
+    rows+='<tr><td class="small fw-semibold">'+p.title+'</td><td class="small">'+p.author_name+'</td><td class="small">'+p.dept_name+'</td><td><span class="badge rounded-pill badge-'+p.status+'">'+p.status+'</span></td><td class="small text-muted">'+fmtDate(p.created_at)+'</td><td class="d-flex gap-1"><a href="/blog/'+p.post_id+'?token='+encodeURIComponent(tok)+'" target="_blank" class="btn btn-outline-secondary btn-sm me-1"><i class="bi bi-eye"></i></a><button class="btn btn-danger btn-sm" onclick="deletePost('+p.post_id+',\'reviewed\')"><i class="bi bi-trash"></i></button></td></tr>';
+  });
+  wrap.innerHTML='<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0"><thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-function viewAnns() {
-  document.getElementById('dash-title').textContent = 'Manage Announcements';
-  var body = document.getElementById('dash-body');
-  api('/announcements?limit=50').then(function(data) {
-    var rows = '';
-    data.announcements.forEach(function(a) {
-      rows += '<tr><td class="small fw-semibold">' + a.title + '</td><td><span class="ann-cat-' + a.category + ' small fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em">' + a.category + '</span></td><td class="small text-muted">' + fmtDate(a.created_at) + '</td><td>' + a.author_name + '</td><td><button class="btn btn-danger btn-sm" onclick="deleteAnn(' + a.ann_id + ')"><i class="bi bi-trash"></i></button></td></tr>';
-    });
-    body.innerHTML = '<div class="mb-3"><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone me-1"></i>New Announcement</button></div>' +
-      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
-      '<thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Category</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th><th></th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table></div>';
-  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load.</p>'; });
+/* ── ANNOUNCEMENTS ── */
+var _anns=[];
+function viewAnns(){
+  document.getElementById('dash-title').textContent='Manage Announcements';
+  var body=document.getElementById('dash-body');
+  api('/announcements?limit=200').then(function(data){
+    _anns=data.announcements||[];
+    body.innerHTML=
+      '<div class="mb-3"><button class="btn btn-gold btn-sm" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone me-1"></i>New Announcement</button></div>'+
+      buildSearchBar({fields:[{type:'text',id:'an-q',placeholder:'Search by title\u2026'},{type:'text',id:'an-author',placeholder:'Search by author\u2026'},{type:'select',id:'an-cat',label:'Categories',options:[{v:'general',l:'General'},{v:'academic',l:'Academic'},{v:'event',l:'Event'},{v:'urgent',l:'Urgent'}]},{type:'text',id:'an-date',placeholder:'Date (YYYY-MM-DD)'}],onSearch:'renderAnns()',onClear:'clearSearch([\'an-q\',\'an-author\',\'an-cat\',\'an-date\']);renderAnns()'})+
+      '<div id="an-count" class="search-result-count"></div><div id="an-wrap"></div>';
+    renderAnns();
+  }).catch(function(){document.getElementById('dash-body').innerHTML='<p class="text-muted">Failed to load.</p>';});
+}
+function renderAnns(){
+  var q=getVal('an-q'),author=getVal('an-author'),cat=getVal('an-cat'),date=getVal('an-date');
+  var f=_anns.filter(function(a){
+    if(q      && !(a.title||'').toLowerCase().includes(q))          return false;
+    if(author && !(a.author_name||'').toLowerCase().includes(author)) return false;
+    if(cat    && (a.category||'')!==cat)                             return false;
+    if(date){ var d=a.created_at?new Date(a.created_at).toISOString().slice(0,10):''; if(!d.includes(date)) return false; }
+    return true;
+  });
+  showCount('an-count',f.length,_anns.length,'announcements');
+  var wrap=document.getElementById('an-wrap'); if(!wrap)return;
+  if(!f.length){wrap.innerHTML=noResultsHtml();return;}
+  var rows='';
+  f.forEach(function(a){
+    rows+='<tr><td class="small fw-semibold">'+a.title+'</td><td><span class="ann-cat-'+a.category+' small fw-semibold text-uppercase" style="font-size:.72rem;letter-spacing:.05em">'+a.category+'</span></td><td class="small text-muted">'+fmtDate(a.created_at)+'</td><td>'+a.author_name+'</td><td><button class="btn btn-danger btn-sm" onclick="deleteAnn('+a.ann_id+')"><i class="bi bi-trash"></i></button></td></tr>';
+  });
+  wrap.innerHTML='<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0"><thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Category</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-function viewUsers() {
-  document.getElementById('dash-title').textContent = 'Manage Users';
-  var body = document.getElementById('dash-body');
-  api('/dashboard/admin/users').then(function(users) {
-    var rows = '';
-    users.forEach(function(u) {
-      var statusBadge = '<span class="badge rounded-pill ' + (u.is_active ? 'badge-approved' : 'badge-rejected') + '">' + (u.is_active ? 'Active' : 'Disabled') + '</span>';
-      var actions = '<button class="btn btn-outline-secondary btn-sm me-1" onclick="toggleUser(' + u.user_id + ')">' + (u.is_active ? 'Disable' : 'Enable') + '</button><button class="btn btn-danger btn-sm" onclick="deleteUser(' + u.user_id + ')"><i class="bi bi-trash"></i></button>';
-      rows += '<tr><td class="small fw-semibold">' + u.name + '</td><td class="small text-muted">' + u.email + '</td><td class="small">' + u.role_name + '</td><td class="small">' + (u.dept_name||'—') + '</td><td>' + statusBadge + '</td><td class="small text-muted">' + fmtDate(u.created_at) + '</td><td>' + actions + '</td></tr>';
-    });
-    body.innerHTML = '<p class="small text-muted mb-3">Total users registered: <strong>' + users.length + '</strong></p>' +
-      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
-      '<thead class="table-light"><tr>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Name</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Email</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Role</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Joined</th>' +
-      '<th></th>' +
-      '</tr></thead><tbody>' + rows + '</tbody></table></div>';
-  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load users.</p>'; });
+/* ── MANAGE USERS ── */
+var _users=[];
+function viewUsers(){
+  document.getElementById('dash-title').textContent='Manage Users';
+  var body=document.getElementById('dash-body');
+  api('/dashboard/admin/users').then(function(users){
+    _users=users;
+    body.innerHTML=
+      buildSearchBar({fields:[{type:'text',id:'us-q',placeholder:'Search by name or email\u2026'},{type:'select',id:'us-dept',label:'Departments',options:[{v:'1',l:'Computing'},{v:'2',l:'Business'},{v:'3',l:'Engineering'},{v:'4',l:'Applied Science'}]},{type:'text',id:'us-date',placeholder:'Joined date (YYYY-MM-DD)'}],onSearch:'renderUsers()',onClear:'clearSearch([\'us-q\',\'us-dept\',\'us-date\']);renderUsers()'})+
+      '<div id="us-count" class="search-result-count"></div><div id="us-wrap"></div>';
+    renderUsers();
+  }).catch(function(){document.getElementById('dash-body').innerHTML='<p class="text-muted">Failed to load users.</p>';});
+}
+function renderUsers(){
+  var q=getVal('us-q'),dept=getVal('us-dept'),date=getVal('us-date');
+  var f=_users.filter(function(u){
+    if(q    && !(u.name||'').toLowerCase().includes(q) && !(u.email||'').toLowerCase().includes(q)) return false;
+    if(dept && String(u.dept_id)!==dept && !(u.dept_name||'').toLowerCase().includes(dept))        return false;
+    if(date){ var d=u.created_at?new Date(u.created_at).toISOString().slice(0,10):''; if(!d.includes(date)) return false; }
+    return true;
+  });
+  showCount('us-count',f.length,_users.length,'users');
+  var wrap=document.getElementById('us-wrap'); if(!wrap)return;
+  if(!f.length){wrap.innerHTML=noResultsHtml();return;}
+  var rows='';
+  f.forEach(function(u){
+    var sb='<span class="badge rounded-pill '+(u.is_active?'badge-approved':'badge-rejected')+'">'+(u.is_active?'Active':'Disabled')+'</span>';
+    var acts='<button class="btn btn-outline-secondary btn-sm me-1" onclick="toggleUser('+u.user_id+')">'+(u.is_active?'Disable':'Enable')+'</button><button class="btn btn-danger btn-sm" onclick="deleteUser('+u.user_id+')"><i class="bi bi-trash"></i></button>';
+    rows+='<tr><td class="small fw-semibold">'+u.name+'</td><td class="small text-muted">'+u.email+'</td><td class="small">'+u.role_name+'</td><td class="small">'+(u.dept_name||'—')+'</td><td>'+sb+'</td><td class="small text-muted">'+fmtDate(u.created_at)+'</td><td>'+acts+'</td></tr>';
+  });
+  wrap.innerHTML='<p class="small text-muted mb-2">Total: <strong>'+_users.length+'</strong></p><div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0"><thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Name</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Email</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Role</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Joined</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-function viewAllPosts() {
-  document.getElementById('dash-title').textContent = 'All Posts';
-  var body = document.getElementById('dash-body');
-  api('/posts/all/admin').then(function(posts) {
-    var rows = '';
-    var tok = Auth.token() || '';
-    posts.forEach(function(p) {
-      var previewBtn = '<a href="/blog/' + p.post_id + '?token=' + encodeURIComponent(tok) + '" target="_blank" class="btn btn-outline-secondary btn-sm me-1" title="Preview"><i class="bi bi-eye"></i></a>';
-      var deleteBtn  = '<button class="btn btn-danger btn-sm" onclick="deletePost(' + p.post_id + ',\'all-posts\')" title="Delete"><i class="bi bi-trash"></i></button>';
-      rows += '<tr>' +
-        '<td class="small fw-semibold">' + p.title + '</td>' +
-        '<td class="small">' + p.author_name + '</td>' +
-        '<td class="small">' + p.dept_name + '</td>' +
-        '<td><span class="badge rounded-pill badge-' + p.status + '">' + p.status + '</span></td>' +
-        '<td class="small text-muted">' + fmtDate(p.created_at) + '</td>' +
-        '<td class="d-flex gap-1">' + previewBtn + deleteBtn + '</td>' +
-        '</tr>';
-    });
-    body.innerHTML = '<p class="small text-muted mb-3">Total posts: <strong>' + posts.length + '</strong></p>' +
-      '<div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0">' +
-      '<thead class="table-light"><tr>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th>' +
-      '<th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th>' +
-      '<th></th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table></div>';
-  }).catch(function() { document.getElementById('dash-body').innerHTML = '<p class="text-muted">Failed to load posts.</p>'; });
+/* ── ALL POSTS (Admin) ── */
+var _allPosts=[];
+function viewAllPosts(){
+  document.getElementById('dash-title').textContent='All Posts';
+  var body=document.getElementById('dash-body');
+  api('/posts/all/admin').then(function(posts){
+    _allPosts=posts;
+    body.innerHTML=
+      buildSearchBar({fields:[{type:'text',id:'ap-q',placeholder:'Search by title\u2026'},{type:'text',id:'ap-author',placeholder:'Search by author\u2026'},{type:'select',id:'ap-dept',label:'Departments',options:[{v:'1',l:'Computing'},{v:'2',l:'Business'},{v:'3',l:'Engineering'},{v:'4',l:'Applied Science'}]},{type:'text',id:'ap-date',placeholder:'Date (YYYY-MM-DD)'}],onSearch:'renderAllPosts()',onClear:'clearSearch([\'ap-q\',\'ap-author\',\'ap-dept\',\'ap-date\']);renderAllPosts()'})+
+      '<div id="ap-count" class="search-result-count"></div><div id="ap-wrap"></div>';
+    renderAllPosts();
+  }).catch(function(){document.getElementById('dash-body').innerHTML='<p class="text-muted">Failed to load posts.</p>';});
+}
+function renderAllPosts(){
+  var f=filterPosts(_allPosts,'ap-q','ap-author','ap-dept','ap-date');
+  showCount('ap-count',f.length,_allPosts.length,'posts');
+  var tok=Auth.token()||''; var wrap=document.getElementById('ap-wrap'); if(!wrap)return;
+  if(!f.length){wrap.innerHTML=noResultsHtml();return;}
+  var rows='';
+  f.forEach(function(p){
+    rows+='<tr><td class="small fw-semibold">'+p.title+'</td><td class="small">'+p.author_name+'</td><td class="small">'+p.dept_name+'</td><td><span class="badge rounded-pill badge-'+p.status+'">'+p.status+'</span></td><td class="small text-muted">'+fmtDate(p.created_at)+'</td><td class="d-flex gap-1"><a href="/blog/'+p.post_id+'?token='+encodeURIComponent(tok)+'" target="_blank" class="btn btn-outline-secondary btn-sm me-1"><i class="bi bi-eye"></i></a><button class="btn btn-danger btn-sm" onclick="deletePost('+p.post_id+',\'all-posts\')"><i class="bi bi-trash"></i></button></td></tr>';
+  });
+  wrap.innerHTML='<p class="small text-muted mb-2">Total: <strong>'+_allPosts.length+'</strong></p><div class="bg-white border rounded-3 overflow-hidden"><table class="table table-hover mb-0"><thead class="table-light"><tr><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Title</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Author</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Department</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Status</th><th class="small text-uppercase text-muted fw-semibold" style="font-size:.75rem">Date</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 
-function approvePost(id) {
-  api('/posts/' + id + '/approve', {method:'PUT'}).then(function() { toast('Post approved!','success'); loadView('pending'); }).catch(function(e) { toast(e.message,'error'); });
-}
-function rejectPost(id) {
-  if (!confirm('Reject this post?')) return;
-  api('/posts/' + id + '/reject', {method:'PUT'}).then(function() { toast('Post rejected'); loadView('pending'); }).catch(function(e) { toast(e.message,'error'); });
-}
-function deletePost(id, returnView) {
-  if (!confirm('Delete this post? This cannot be undone.')) return;
-  api('/posts/' + id, {method:'DELETE'}).then(function() {
-    toast('Post deleted','success');
-    loadView(returnView || 'my-posts');
-  }).catch(function(e) { toast(e.message,'error'); });
-}
-function toggleUser(id) {
-  api('/dashboard/admin/users/' + id + '/toggle', {method:'PUT'}).then(function() { toast('Updated','success'); loadView('users'); }).catch(function(e) { toast(e.message,'error'); });
-}
-function deleteUser(id) {
-  if (!confirm('Delete this user? This cannot be undone.')) return;
-  api('/dashboard/admin/users/' + id, {method:'DELETE'}).then(function() { toast('Deleted','success'); loadView('users'); }).catch(function(e) { toast(e.message,'error'); });
-}
-function deleteAnn(id) {
-  if (!confirm('Delete this announcement?')) return;
-  api('/announcements/' + id, {method:'DELETE'}).then(function() { toast('Deleted','success'); loadView('ann-manage'); }).catch(function(e) { toast(e.message,'error'); });
-}
+/* ── ACTIONS ── */
+function approvePost(id){api('/posts/'+id+'/approve',{method:'PUT'}).then(function(){toast('Post approved!','success');loadView('pending');}).catch(function(e){toast(e.message,'error');});}
+function rejectPost(id){if(!confirm('Reject this post?'))return;api('/posts/'+id+'/reject',{method:'PUT'}).then(function(){toast('Post rejected');loadView('pending');}).catch(function(e){toast(e.message,'error');});}
+function deletePost(id,rv){if(!confirm('Delete this post? This cannot be undone.'))return;api('/posts/'+id,{method:'DELETE'}).then(function(){toast('Post deleted','success');loadView(rv||'my-posts');}).catch(function(e){toast(e.message,'error');});}
+function toggleUser(id){api('/dashboard/admin/users/'+id+'/toggle',{method:'PUT'}).then(function(){toast('Updated','success');loadView('users');}).catch(function(e){toast(e.message,'error');});}
+function deleteUser(id){if(!confirm('Delete this user? This cannot be undone.'))return;api('/dashboard/admin/users/'+id,{method:'DELETE'}).then(function(){toast('Deleted','success');loadView('users');}).catch(function(e){toast(e.message,'error');});}
+function deleteAnn(id){if(!confirm('Delete this announcement?'))return;api('/announcements/'+id,{method:'DELETE'}).then(function(){toast('Deleted','success');loadView('ann-manage');}).catch(function(e){toast(e.message,'error');});}
 
-function submitPost() {
-  var title   = document.getElementById('post-title').value.trim();
-  var dept_id = document.getElementById('post-dept').value;
-  var content = document.getElementById('post-content').value.trim();
-  var tagStr  = document.getElementById('post-tags').value;
-  var tags    = tagStr.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
-  if (!title || !content) { toast('Title and content required','error'); return; }
-  if (!dept_id)           { toast('Please select a department','error'); return; }
-  api('/posts', {method:'POST', body:{title:title, content:content, dept_id:parseInt(dept_id), tags:tags}}).then(function(newPost) {
+function submitPost(){
+  var title=document.getElementById('post-title').value.trim();
+  var dept_id=document.getElementById('post-dept').value;
+  var content=document.getElementById('post-content').value.trim();
+  var tags=document.getElementById('post-tags').value.split(',').map(function(t){return t.trim();}).filter(Boolean);
+  if(!title||!content){toast('Title and content required','error');return;}
+  if(!dept_id){toast('Please select a department','error');return;}
+  api('/posts',{method:'POST',body:{title:title,content:content,dept_id:parseInt(dept_id),tags:tags}}).then(function(){
     toast('Post submitted for review!','success');
-    var m = bootstrap.Modal.getInstance(document.getElementById('postModal'));
-    if (m) m.hide();
-    ['post-title','post-content','post-tags'].forEach(function(id) { document.getElementById(id).value=''; });
+    var m=bootstrap.Modal.getInstance(document.getElementById('postModal')); if(m)m.hide();
+    ['post-title','post-content','post-tags'].forEach(function(id){document.getElementById(id).value='';});
     loadView('my-posts');
-  }).catch(function(e) { toast(e.message || 'Failed to submit. Make sure you are logged in.','error'); });
+  }).catch(function(e){toast(e.message||'Failed to submit.','error');});
 }
-
-function submitAnn() {
-  var title    = document.getElementById('ann-title').value.trim();
-  var content  = document.getElementById('ann-content').value.trim();
-  var category = document.getElementById('ann-cat').value;
-  if (!title || !content) { toast('Title and content required','error'); return; }
-  api('/announcements', {method:'POST', body:{title:title, content:content, category:category}}).then(function() {
+function submitAnn(){
+  var title=document.getElementById('ann-title').value.trim();
+  var content=document.getElementById('ann-content').value.trim();
+  var category=document.getElementById('ann-cat').value;
+  if(!title||!content){toast('Title and content required','error');return;}
+  api('/announcements',{method:'POST',body:{title:title,content:content,category:category}}).then(function(){
     toast('Announcement published!','success');
-    var m = bootstrap.Modal.getInstance(document.getElementById('annModal'));
-    if (m) m.hide();
+    var m=bootstrap.Modal.getInstance(document.getElementById('annModal')); if(m)m.hide();
     loadView('ann-manage');
-  }).catch(function(e) { toast(e.message,'error'); });
+  }).catch(function(e){toast(e.message,'error');});
 }
 
+/* ── INIT ── */
 buildSidebar();
 loadView('overview');
+loadNotifications();
 </script>

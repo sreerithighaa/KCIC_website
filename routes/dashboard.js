@@ -125,6 +125,7 @@ async function routes(fastify, options) {
   });
 
   // GET /api/dashboard/admin/users
+  // 4-TABLE JOIN: users → roles → departments → posts
   fastify.get('/admin/users', {
     preHandler: [authenticate, requireRole(ROLE_ADMIN)]
   }, async (req, reply) => {
@@ -133,16 +134,44 @@ async function routes(fastify, options) {
     let where = 'WHERE 1=1';
     if (role_id) { params.push(role_id); where += ` AND u.role_id=$${params.length}`; }
     if (dept_id) { params.push(dept_id); where += ` AND u.dept_id=$${params.length}`; }
-    if (search)  { params.push(`%${search}%`); where += ` AND (u.name ILIKE $${params.length} OR u.email ILIKE $${params.length})`; }
+    if (search)  {
+      params.push('%' + search + '%');
+      const i = params.length;
+      params.push('%' + search + '%');
+      const j = params.length;
+      where += ` AND (u.name ILIKE $${i} OR u.email ILIKE $${j})`;
+    }
 
     try {
+      /*
+       * 4-TABLE JOIN
+       * Table 1: users       — registered user accounts
+       * Table 2: roles       — role of each user (admin/assessor/student)
+       * Table 3: departments — department each user belongs to
+       * Table 4: posts       — blog posts written by each user
+       *
+       * users JOIN roles            ON roles.role_id       = users.role_id
+       * users LEFT JOIN departments ON departments.dept_id = users.dept_id
+       * users LEFT JOIN posts       ON posts.author_id     = users.user_id
+       */
       const result = await pool.query(
-        `SELECT u.user_id, u.name, u.email, u.is_active, u.created_at,
-                r.role_name, d.dept_name
+        `SELECT
+           u.user_id,
+           u.name,
+           u.email,
+           u.is_active,
+           u.created_at,
+           r.role_name,
+           d.dept_name,
+           COUNT(p.post_id)                                     AS post_count,
+           COUNT(p.post_id) FILTER (WHERE p.status='approved')  AS approved_count,
+           COUNT(p.post_id) FILTER (WHERE p.status='pending')   AS pending_count
          FROM users u
-         JOIN roles r ON r.role_id=u.role_id
-         LEFT JOIN departments d ON d.dept_id=u.dept_id
+         JOIN      roles       r  ON r.role_id  = u.role_id
+         LEFT JOIN departments d  ON d.dept_id  = u.dept_id
+         LEFT JOIN posts       p  ON p.author_id = u.user_id
          ${where}
+         GROUP BY u.user_id, r.role_name, d.dept_name
          ORDER BY u.created_at DESC
          LIMIT $${params.length+1} OFFSET $${params.length+2}`,
         [...params, limit, (page-1)*limit]

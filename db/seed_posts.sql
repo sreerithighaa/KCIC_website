@@ -1,8 +1,3 @@
--- ============================================================
--- KCIC Demo Blog Posts Seed
--- Run AFTER npm run db:init
--- ============================================================
-
 -- Insert named demo student authors (passwords: Student@1234 same hash)
 INSERT INTO users (name, email, pwd, role_id, dept_id)
 VALUES
