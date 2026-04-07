@@ -2,6 +2,8 @@ require('dotenv').config();
 const fastify = require('fastify')({ logger: true });
 const path    = require('path');
 const pool    = require('./db/pool');
+const { SitemapStream, streamToPromise } = require('sitemap');
+const { createGzip } = require('zlib');
 
 // ── Plugins ───────────────────────────────────────────────────────────────────
 fastify.register(require('@fastify/formbody'));
@@ -148,6 +150,23 @@ fastify.setNotFoundHandler(async (req, reply) => {
 
 // ── Health ────────────────────────────────────────────────────────────────────
 fastify.get('/api', async () => ({ message: 'KCIC API v1.0 ✓', version: '1.0.0' }));
+
+fastify.get('/sitemap.xml', async (req, reply) => {
+  const smStream = new SitemapStream({ hostname: 'https://kcic-website-2.onrender.com' });
+  const pipeline = smStream.pipe(createGzip());
+
+  smStream.write({ url: '/', changefreq: 'daily', priority: 1.0 });
+  smStream.write({ url: '/about', changefreq: 'weekly', priority: 0.8 });
+  smStream.write({ url: '/contact', changefreq: 'monthly', priority: 0.6 });
+  // Add any other pages you have here
+
+  smStream.end();
+
+  return reply
+    .header('Content-Type', 'application/xml')
+    .header('Content-Encoding', 'gzip')
+    .send(pipeline);
+});
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 fastify.listen({ port: process.env.PORT || 3000, host: '0.0.0.0' }, (err, address) => {
