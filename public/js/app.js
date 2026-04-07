@@ -1,4 +1,27 @@
-// ── KCIC Shared JS ──────────────────────────────────────────────────
+import { SitemapStream, streamToPromise } from 'sitemap'
+import { createGzip } from 'zlib'
+
+fastify.get('/sitemap.xml', async (req, reply) => {
+  const smStream = new SitemapStream({ 
+    hostname: 'https://kcic-website-2.onrender.com' 
+  })
+  const pipeline = smStream.pipe(createGzip())
+
+  smStream.write({ url: '/', changefreq: 'daily', priority: 1.0 })
+  smStream.write({ url: '/announcements', changefreq: 'daily', priority: 0.9 })
+  smStream.write({ url: '/blogs', changefreq: 'daily', priority: 0.9 })
+  smStream.write({ url: '/blog-view', changefreq: 'weekly', priority: 0.7 })
+  smStream.write({ url: '/login', changefreq: 'monthly', priority: 0.5 })
+  smStream.write({ url: '/register', changefreq: 'monthly', priority: 0.5 })
+
+  smStream.end()
+
+  reply
+    .header('Content-Type', 'application/xml')
+    .header('Content-Encoding', 'gzip')
+    .send(pipeline)
+});
+
 const API = '/api';
 
 const Auth = {

@@ -5,19 +5,20 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev":   "node --watch server.js",
+    "dev": "node --watch server.js",
     "db:init": "node db/init.js"
   },
   "type": "commonjs",
   "dependencies": {
     "@fastify/formbody": "^8.0.2",
-    "@fastify/static":  "^9.0.0",
-    "@fastify/view":    "^11.1.1",
-    "bcryptjs":         "^3.0.3",
-    "dotenv":           "^17.3.1",
-    "ejs":              "^3.1.10",
-    "fastify":          "^5.7.4",
-    "jsonwebtoken":     "^9.0.2",
-    "pg":               "^8.19.0"
+    "@fastify/static": "^9.0.0",
+    "@fastify/view": "^11.1.1",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
+    "ejs": "^3.1.10",
+    "fastify": "^5.7.4",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.19.0",
+    "sitemap": "^9.0.1"
   }
 }

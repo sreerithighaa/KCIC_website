@@ -35,12 +35,47 @@ fastify.register(require('./routes/dashboard'),     { prefix: '/api/dashboard' }
 
 // ── Page Routes (EJS) ─────────────────────────────────────────────────────────
 fastify.get('/',              async (req, reply) => reply.redirect('/home'));
-fastify.get('/home',          async (req, reply) => reply.view('pages/home.ejs',          { title: 'Home',           activePage: 'home' }));
-fastify.get('/blogs',         async (req, reply) => reply.view('pages/blogs.ejs',         { title: 'Academic Blogs', activePage: 'blogs' }));
-fastify.get('/announcements', async (req, reply) => reply.view('pages/announcements.ejs', { title: 'Announcements',  activePage: 'announcements' }));
-fastify.get('/login',         async (req, reply) => reply.view('pages/login.ejs',         { title: 'Sign In',        activePage: '' }));
-fastify.get('/register',      async (req, reply) => reply.view('pages/register.ejs',      { title: 'Register',       activePage: '' }));
-fastify.get('/dashboard',     async (req, reply) => reply.view('pages/dashboard.ejs',     { title: 'Dashboard',      activePage: '' }));
+fastify.get('/home', async (req, reply) => reply.view('pages/home.ejs', {
+  title:       'Home',
+  activePage:  'home',
+  description: 'Kings Cornerstone International College — Empowering academic excellence through student blogs, departmental posts, and college announcements.',
+  keywords:    'kings cornerstone, KCIC, international college, academic excellence, student blogs, college announcements'
+}));
+
+fastify.get('/blogs', async (req, reply) => reply.view('pages/blogs.ejs', {
+  title:       'Academic Blogs',
+  activePage:  'blogs',
+  description: 'Explore approved student and faculty blog posts from Kings Cornerstone International College across all departments.',
+  keywords:    'academic blogs, student posts, KCIC blogs, college articles, department blogs, kings cornerstone'
+}));
+
+fastify.get('/announcements', async (req, reply) => reply.view('pages/announcements.ejs', {
+  title:       'Announcements',
+  activePage:  'announcements',
+  description: 'Stay up to date with the latest announcements, notices, and updates from Kings Cornerstone International College.',
+  keywords:    'KCIC announcements, college notices, kings cornerstone updates, college news, student announcements'
+}));
+
+fastify.get('/login', async (req, reply) => reply.view('pages/login.ejs', {
+  title:       'Sign In',
+  activePage:  '',
+  description: 'Sign in to your Kings Cornerstone International College account using your @cornerstone.edu.in email.',
+  keywords:    'KCIC login, kings cornerstone sign in, student login, college portal login'
+}));
+
+fastify.get('/register', async (req, reply) => reply.view('pages/register.ejs', {
+  title:       'Register',
+  activePage:  '',
+  description: 'Create your Kings Cornerstone International College account and join our academic community.',
+  keywords:    'KCIC register, kings cornerstone sign up, student registration, college account'
+}));
+
+fastify.get('/dashboard', async (req, reply) => reply.view('pages/dashboard.ejs', {
+  title:       'Dashboard',
+  activePage:  '',
+  description: 'Manage your posts, review submissions, and access your Kings Cornerstone International College dashboard.',
+  keywords:    'KCIC dashboard, student dashboard, assessor dashboard, admin panel, kings cornerstone portal'
+}));
 
 // Blog single view — SSR post data into EJS
 // Approved posts are public; author can also preview their own pending/rejected posts
@@ -85,13 +120,20 @@ fastify.get('/blog/:id', async (req, reply) => {
     );
 
     return reply.view('pages/blog-view.ejs', {
-      title:      canView ? post.title : 'Post Not Found',
-      activePage: 'blogs',
-      post:       canView ? post : null
+      title:        canView ? post.title : 'Post Not Found',
+      activePage:  'blogs',
+      post:        canView ? post : null,
+      description: canView ? (post.excerpt || post.content?.substring(0, 155) + '...') : 'This post is unavailable or has not been published yet.',
+      keywords: canView ? `${(post.tags || []).join(', ')}, ${post.dept_name}, KCIC blogs, kings cornerstone` : 'kings cornerstone, KCIC'
     });
   } catch (err) {
     fastify.log.error(err);
-    return reply.view('pages/blog-view.ejs', { title: 'Error', activePage: 'blogs', post: null });
+    return reply.view('pages/blog-view.ejs', { 
+      title:       'Error',
+      activePage:  'blogs',
+      post:        null,
+      description: 'An error occurred while loading this post on Kings Cornerstone International College.',
+      keywords:    'kings cornerstone, KCIC blogs' });
   }
 });
 
