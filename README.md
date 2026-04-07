@@ -121,18 +121,6 @@ kcic/
 
 ---
 
-## Logo
-
-Replace the placeholder logo in `views/partials/header.ejs` and `footer.ejs`:
-```html
-<!-- Find this line and replace src: -->
-<img src="https://placehold.co/40x40/..." ... />
-<!-- Replace with: -->
-<img src="/assets/logo.png" ... />
-```
-Then place your logo file at `public/assets/logo.png`.
-
----
 
 ## Database Schema (3NF)
 
